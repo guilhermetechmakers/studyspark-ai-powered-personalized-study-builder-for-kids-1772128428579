@@ -117,6 +117,14 @@ export default {
           '0%, 100%': { transform: 'scale(1)' },
           '50%': { transform: 'scale(1.1)' },
         },
+        'toast-in': {
+          '0%': { opacity: '0', transform: 'translateY(-8px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'toast-out': {
+          '0%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+          '100%': { opacity: '0', transform: 'translateY(-8px) scale(0.98)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out forwards',
@@ -130,6 +138,8 @@ export default {
         'flip-card-back': 'flip-card-back 0.4s ease-in-out forwards',
         'bounce-in': 'bounce-in 0.4s ease-out forwards',
         celebration: 'celebration 0.5s ease-in-out',
+        'toast-in': 'toast-in 0.2s ease-out forwards',
+        'toast-out': 'toast-out 0.2s ease-out forwards',
       },
     },
   },
