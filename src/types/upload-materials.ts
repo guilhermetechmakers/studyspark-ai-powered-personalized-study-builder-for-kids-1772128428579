@@ -4,7 +4,7 @@
  * All types support runtime safety with optional chaining and defaults.
  */
 
-export type OcrStatus = 'pending' | 'in_progress' | 'complete' | 'failed'
+export type OcrStatus = 'pending' | 'in_progress' | 'complete' | 'completed' | 'failed' | 'corrected'
 
 export interface SnippetPosition {
   start: number

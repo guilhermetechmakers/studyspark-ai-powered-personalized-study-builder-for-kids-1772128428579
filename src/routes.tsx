@@ -11,6 +11,7 @@ import { StudyLibraryPage } from '@/pages/study-library'
 import { AnalyticsDashboardPage } from '@/pages/analytics-dashboard'
 import { CreateStudyWizard } from '@/pages/create-study-wizard'
 import { UploadMaterialsPage } from '@/pages/upload-materials'
+import { OcrCorrectionReviewPage } from '@/pages/ocr-correction-review'
 import { StudyDetailPage } from '@/pages/study-detail'
 import { StudyReviewPage } from '@/pages/study-review'
 import { StudyViewerPage } from '@/pages/study-viewer'
@@ -44,6 +45,9 @@ import { SearchRedirectPage } from '@/pages/search-redirect'
 import { SearchPage } from '@/pages/search-page'
 import { ExportPage } from '@/pages/export-page'
 import { ExportProgressPage } from '@/pages/export-progress-page'
+import { PageP006UploadOcr } from '@/pages/page-p006-upload-ocr'
+import { PageP007OcrCorrection } from '@/pages/page-p007-ocr-correction'
+import { PageP008FileManagement } from '@/pages/page-p008-file-management'
 import { NotificationCenterPage } from '@/pages/notification-center'
 import { NotificationPreferencesPage } from '@/pages/notification-preferences'
 import { AdminNotificationsPage } from '@/pages/admin-notifications'
@@ -85,6 +89,10 @@ export const router = createBrowserRouter([
       { path: 'studies/:id/detail', element: <StudyDetailPage /> },
       { path: 'create', element: <CreateStudyWizard /> },
       { path: 'upload-materials', element: <UploadMaterialsPage /> },
+      { path: 'upload-ocr', element: <PageP006UploadOcr /> },
+      { path: 'files', element: <PageP008FileManagement /> },
+      { path: 'files/:id/correct', element: <PageP007OcrCorrection /> },
+      { path: 'ocr-correction-review', element: <OcrCorrectionReviewPage /> },
       { path: 'export', element: <ExportPage /> },
       { path: 'export-progress', element: <ExportProgressPage /> },
       { path: 'exports', element: <ExportProgressPage /> },

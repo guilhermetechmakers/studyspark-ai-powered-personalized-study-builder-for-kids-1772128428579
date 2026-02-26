@@ -11,6 +11,14 @@ import { ValidationSummary } from './validation-summary'
 import { cn } from '@/lib/utils'
 import type { FileItem, Snippet, ValidationError } from '@/types/upload-materials'
 import { dataGuard } from '@/lib/data-guard'
+import {
+  initUpload,
+  uploadToStorage,
+  completeUpload,
+  getOcr,
+  saveCorrections,
+} from '@/api/files'
+import type { OcrBlock } from '@/types/files'
 
 export interface UploadMaterialsContentProps {
   files?: FileItem[]
@@ -22,19 +30,23 @@ export interface UploadMaterialsContentProps {
   className?: string
 }
 
-function createMockSnippets(text: string): Snippet[] {
-  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean)
-  return sentences.map((s, i) => ({
+function blocksToSnippets(blocks: OcrBlock[]): Snippet[] {
+  const items = Array.isArray(blocks) ? blocks : []
+  return items.map((b, i) => ({
     id: `snippet-${i}`,
-    text: s.trim(),
-    confidence: 0.85 + Math.random() * 0.15,
+    text: b?.text ?? '',
+    confidence: b?.confidence ?? 0.9,
     important: false,
-    position: { start: 0, end: s.length },
+    position: { start: 0, end: (b?.text ?? '').length },
   }))
 }
 
-function simulateOcr(text: string): Snippet[] {
-  return createMockSnippets(text || 'Sample extracted text from document. Key concepts and definitions will appear here for AI context.')
+function normalizeOcrStatus(
+  s: string | undefined
+): 'pending' | 'in_progress' | 'complete' | 'failed' {
+  if (s === 'completed' || s === 'corrected') return 'complete'
+  if (s === 'in_progress' || s === 'pending' || s === 'failed') return s
+  return 'pending'
 }
 
 export function UploadMaterialsContent({
@@ -80,9 +92,9 @@ export function UploadMaterialsContent({
   )
 
   const handleFileAdd = useCallback(
-    (newFiles: File[]) => {
-      const items: FileItem[] = newFiles.map((f, i) => ({
-        id: `file-${Date.now()}-${i}`,
+    async (newFiles: File[]) => {
+      const tempItems: FileItem[] = newFiles.map((f, i) => ({
+        id: `temp-${Date.now()}-${i}`,
         name: f.name,
         size: f.size,
         type: f.type,
@@ -92,33 +104,60 @@ export function UploadMaterialsContent({
         ocrSnippets: [],
         file: f,
       }))
-      setFiles((prev) => [...prev, ...items])
+      setFiles((prev) => [...prev, ...tempItems])
       setErrors([])
 
-      items.forEach((item) => {
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === item.id ? { ...f, ocrStatus: 'in_progress' as const } : f
-          )
-        )
-        setTimeout(() => {
-          const mockText = `Extracted content from ${item.name}. This is sample OCR output. Key terms and definitions would appear here.`
-          const snippets = simulateOcr(mockText)
+      for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i]
+        const tempId = tempItems[i]?.id ?? `temp-${i}`
+        try {
           setFiles((prev) =>
             prev.map((f) =>
-              f.id === item.id
+              f.id === tempId ? { ...f, ocrStatus: 'in_progress' as const } : f
+            )
+          )
+
+          const { fileId, storagePath } = await initUpload({
+            filename: file.name,
+            mimeType: file.type,
+            size: file.size,
+          })
+
+          await uploadToStorage(storagePath, file)
+
+          const { ocrStatus } = await completeUpload(fileId)
+
+          const ocrResult = await getOcr(fileId)
+          const blocks = (ocrResult?.blocks ?? []) as OcrBlock[]
+          const snippets = blocksToSnippets(blocks)
+          const fullText = ocrResult?.fullText ?? ''
+
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === tempId
                 ? {
                     ...f,
-                    ocrStatus: 'complete' as const,
-                    ocrText: mockText,
+                    id: fileId,
+                    name: file.name,
+                    ocrStatus: normalizeOcrStatus(ocrStatus) as 'complete',
+                    ocrText: fullText,
                     ocrSnippets: snippets,
                   }
                 : f
             )
           )
-          if (!selectedFileId && item.id) setSelectedFileId(item.id)
-        }, 1200)
-      })
+          if (!selectedFileId) setSelectedFileId(fileId)
+          toast.success(`Processed ${file.name}`)
+        } catch (err) {
+          const msg = (err as Error)?.message ?? 'Upload failed'
+          toast.error(msg)
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === tempId ? { ...f, ocrStatus: 'failed' as const } : f
+            )
+          )
+        }
+      }
     },
     [setFiles, selectedFileId]
   )
@@ -135,9 +174,9 @@ export function UploadMaterialsContent({
   )
 
   const handleRetryOcr = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const file = (allFiles ?? []).find((f) => f.id === id)
-      if (!file) return
+      if (!file || id.startsWith('temp-')) return
 
       setFiles((prev) =>
         prev.map((f) =>
@@ -145,23 +184,34 @@ export function UploadMaterialsContent({
         )
       )
 
-      setTimeout(() => {
-        const mockText = file.ocrText ?? `Retry OCR for ${file.name}. Sample extracted text.`
-        const snippets = simulateOcr(mockText)
+      try {
+        const { ocrStatus } = await completeUpload(id)
+        const ocrResult = await getOcr(id)
+        const blocks = (ocrResult?.blocks ?? []) as OcrBlock[]
+        const snippets = blocksToSnippets(blocks)
+        const fullText = ocrResult?.fullText ?? ''
+
         setFiles((prev) =>
           prev.map((f) =>
             f.id === id
               ? {
                   ...f,
-                  ocrStatus: 'complete' as const,
-                  ocrText: mockText,
+                  ocrStatus: normalizeOcrStatus(ocrStatus) as 'complete',
+                  ocrText: fullText,
                   ocrSnippets: snippets,
                 }
               : f
           )
         )
         toast.success('OCR complete')
-      }, 1500)
+      } catch (err) {
+        toast.error((err as Error)?.message ?? 'OCR failed')
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === id ? { ...f, ocrStatus: 'failed' as const } : f
+          )
+        )
+      }
     },
     [allFiles, setFiles]
   )
@@ -223,7 +273,7 @@ export function UploadMaterialsContent({
     [selectedFileId, setFiles]
   )
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const validationErrors: ValidationError[] = []
     if ((allFiles ?? []).length === 0) {
       validationErrors.push({ message: 'Add at least one file before saving.' })
@@ -233,8 +283,26 @@ export function UploadMaterialsContent({
       toast.error('Please fix the errors before saving.')
       return
     }
+
+    const filesToSave = allFiles ?? []
+    for (const f of filesToSave) {
+      if (!f.id.startsWith('temp-') && (f.ocrSnippets ?? []).length > 0) {
+        const correctedText = (f.ocrSnippets ?? [])
+          .map((s) => s?.text ?? '')
+          .filter(Boolean)
+          .join(' ')
+        if (correctedText) {
+          try {
+            await saveCorrections(f.id, correctedText)
+          } catch {
+            // Non-blocking
+          }
+        }
+      }
+    }
+
     onSave?.({
-      files: allFiles ?? [],
+      files: filesToSave,
       importantSnippets,
     })
     toast.success('Materials saved!')

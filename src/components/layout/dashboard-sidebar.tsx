@@ -17,6 +17,7 @@ import {
   Users,
   BarChart3,
   FileDown,
+  FileText,
   History,
   Bell,
   Search,
@@ -39,6 +40,8 @@ const navItems = [
   { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/dashboard/create', label: 'Create Study', icon: PlusCircle },
   { to: '/dashboard/upload-materials', label: 'Upload Materials', icon: Upload },
+  { to: '/dashboard/upload-ocr', label: 'Upload & OCR', icon: Upload },
+  { to: '/dashboard/files', label: 'Files & Documents', icon: FileText },
   { to: '/dashboard/checkout', label: 'Checkout', icon: ShoppingCart },
   { to: '/dashboard/payments', label: 'Payments & Billing', icon: CreditCard },
 ]

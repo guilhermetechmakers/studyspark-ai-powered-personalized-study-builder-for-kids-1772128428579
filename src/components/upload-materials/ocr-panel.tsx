@@ -17,7 +17,7 @@ import { dataGuard } from '@/lib/data-guard'
 export interface OCRPanelProps {
   ocrText?: string
   snippets: Snippet[]
-  ocrStatus?: 'pending' | 'in_progress' | 'complete' | 'failed'
+  ocrStatus?: 'pending' | 'in_progress' | 'complete' | 'completed' | 'failed' | 'corrected'
   onSnippetEdit: (id: string, newText: string) => void
   onToggleImportant: (id: string) => void
   className?: string

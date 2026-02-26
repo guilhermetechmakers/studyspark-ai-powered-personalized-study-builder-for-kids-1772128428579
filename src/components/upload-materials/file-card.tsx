@@ -70,6 +70,8 @@ function OcrStatusBadge({ status }: { status: OcrStatus }) {
         </span>
       )
     case 'complete':
+    case 'completed':
+    case 'corrected':
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
           <Check className="h-3 w-3" />
@@ -161,7 +163,7 @@ export function FileCard({ file, onRemove, onRetryOcr, onPreview }: FileCardProp
                   <Eye className="mr-1.5 h-3.5 w-3.5" />
                   Preview
                 </Button>
-                {(file.ocrStatus === 'failed' || file.ocrStatus === 'complete') && onRetryOcr && (
+                {(file.ocrStatus === 'failed' || file.ocrStatus === 'complete' || file.ocrStatus === 'completed' || file.ocrStatus === 'corrected') && onRetryOcr && (
                   <Button
                     variant="ghost"
                     size="sm"
