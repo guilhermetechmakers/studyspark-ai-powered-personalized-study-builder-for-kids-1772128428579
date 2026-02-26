@@ -52,6 +52,32 @@ export async function apiPost<T>(path: string, body?: unknown, options?: Request
   return handleResponse<T>(res)
 }
 
+export async function apiPatch<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  return handleResponse<T>(res)
+}
+
+export async function apiPatch<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  return handleResponse<T>(res)
+}
+
 export async function apiPut<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
