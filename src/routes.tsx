@@ -17,6 +17,8 @@ import { ErrorPage } from '@/pages/error'
 import { AboutHelpPage } from '@/pages/about-help'
 import { LegalPage } from '@/pages/legal'
 import { PrivacyPolicyPage } from '@/pages/privacy-policy'
+import { TermsOfServicePage } from '@/pages/terms-of-service'
+import { OnboardingAcceptTermsPage } from '@/pages/onboarding-accept-terms'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { AdminOverviewPage } from '@/pages/admin-overview'
@@ -25,20 +27,6 @@ import { AdminModerationPage } from '@/pages/admin-moderation'
 import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
-
-const termsContent = `
-<p>By using StudySpark, you agree to these Terms of Service.</p>
-<h3>Use of Service</h3>
-<p>You must use the service in compliance with applicable laws. You are responsible for the content you upload and the accuracy of information provided.</p>
-<h3>Account</h3>
-<p>You must provide accurate account information. You are responsible for maintaining the security of your account.</p>
-<h3>Intellectual Property</h3>
-<p>You retain ownership of your content. You grant us a license to process and display it for the service.</p>
-<h3>Limitation of Liability</h3>
-<p>StudySpark is provided "as is." We are not liable for indirect or consequential damages.</p>
-<h3>Changes</h3>
-<p>We may update these terms. Continued use constitutes acceptance.</p>
-`
 
 const cookiesContent = `
 <p>We use cookies and similar technologies to provide and improve our service.</p>
@@ -62,7 +50,9 @@ export const router = createBrowserRouter([
   { path: '/about-help', element: <AboutHelpPage /> },
   { path: '/privacy', element: <PrivacyPolicyPage /> },
   { path: '/privacy-policy', element: <PrivacyPolicyPage /> },
-  { path: '/terms', element: <LegalPage title="Terms of Service" content={termsContent} /> },
+  { path: '/terms', element: <TermsOfServicePage /> },
+  { path: '/terms-of-service', element: <TermsOfServicePage /> },
+  { path: '/onboarding/accept-terms', element: <OnboardingAcceptTermsPage /> },
   { path: '/cookies', element: <LegalPage title="Cookie Policy" content={cookiesContent} /> },
   {
     path: '/dashboard',

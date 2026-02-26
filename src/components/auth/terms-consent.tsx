@@ -38,7 +38,7 @@ export function TermsConsent({
         >
           I accept the{' '}
           <Link
-            to="/terms"
+            to="/terms-of-service"
             className="text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
           >
             Terms of Service

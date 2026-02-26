@@ -5,7 +5,7 @@ const footerLinks = [
   { label: 'Help', href: '/help' },
   { label: 'About', href: '/about' },
   { label: 'Privacy', href: '/privacy' },
-  { label: 'Terms', href: '/terms' },
+  { label: 'Terms', href: '/terms-of-service' },
 ]
 
 export function DashboardFooter() {

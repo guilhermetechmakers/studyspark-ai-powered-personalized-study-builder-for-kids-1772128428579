@@ -134,7 +134,7 @@ export function PrivacyPolicyPage() {
           </Link>
           <div className="flex gap-6">
             <Link
-              to="/terms"
+              to="/terms-of-service"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:rounded"
             >
               Terms of Service
