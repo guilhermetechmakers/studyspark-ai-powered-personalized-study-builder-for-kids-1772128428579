@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Bell, User, Settings, LogOut, Plus } from 'lucide-react'
+import { Search, Bell, User, Settings, LogOut, Plus, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -70,6 +70,12 @@ export function DashboardHeader() {
               <Link to="/help" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Help
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/admin" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Admin
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

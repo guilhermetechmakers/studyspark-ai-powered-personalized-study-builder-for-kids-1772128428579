@@ -73,6 +73,16 @@ export interface AnalyticsDataPoint {
   activeSubscriptions: number
 }
 
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page?: number
+  limit?: number
+}
+
+/** @deprecated Use AnalyticsDataPoint */
+export type AnalyticsTimePoint = AnalyticsDataPoint
+
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug'
 
 export interface SystemLog {
@@ -88,5 +98,7 @@ export interface SystemHealthSummary {
   queueBacklog: number
   aiApiUsage: number
   errorCount: number
-  lastUpdated: string
+  errorCount24h?: number
+  lastUpdated?: string
+  status?: string
 }

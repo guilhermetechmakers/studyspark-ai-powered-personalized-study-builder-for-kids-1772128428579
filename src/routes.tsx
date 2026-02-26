@@ -17,6 +17,13 @@ import { ErrorPage } from '@/pages/error'
 import { AboutHelpPage } from '@/pages/about-help'
 import { LegalPage } from '@/pages/legal'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import { AdminLayout } from '@/components/admin/admin-layout'
+import { AdminOverviewPage } from '@/pages/admin-overview'
+import { AdminUsersPage } from '@/pages/admin-users'
+import { AdminModerationPage } from '@/pages/admin-moderation'
+import { AdminPlansPage } from '@/pages/admin-plans'
+import { AdminAnalyticsPage } from '@/pages/admin-analytics'
+import { AdminHealthPage } from '@/pages/admin-health'
 
 const privacyContent = `
 <p>StudySpark ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our platform.</p>
@@ -84,6 +91,18 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '/study/:id/play', element: <StudyViewerPage /> },
+  {
+    path: '/admin',
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <AdminOverviewPage /> },
+      { path: 'users', element: <AdminUsersPage /> },
+      { path: 'moderation', element: <AdminModerationPage /> },
+      { path: 'plans', element: <AdminPlansPage /> },
+      { path: 'analytics', element: <AdminAnalyticsPage /> },
+      { path: 'health', element: <AdminHealthPage /> },
+    ],
+  },
   { path: '/404', element: <NotFoundPage /> },
   { path: '/500', element: <ErrorPage /> },
   { path: '*', element: <NotFoundPage /> },
