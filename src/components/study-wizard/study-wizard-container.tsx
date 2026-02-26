@@ -124,7 +124,7 @@ type WizardAction =
   | { type: 'SET_DUPLICATING'; value: boolean }
   | { type: 'SET_EXPORTING'; value: boolean }
   | { type: 'ADD_VERSION'; version: Version }
-  | { type: 'SET_OCR_STATUS'; materialId: string; status: 'not_started' | 'in_progress' | 'done' }
+  | { type: 'SET_OCR_STATUS'; materialId: string; status: import('@/types/study-wizard').OCRStatus }
 
 function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
@@ -297,7 +297,7 @@ export function StudyWizardContainer() {
   }, [simulateStreaming])
 
   const handleOcrStatusChange = useCallback(
-    (materialId: string, status: 'not_started' | 'in_progress' | 'done') => {
+    (materialId: string, status: import('@/types/study-wizard').OCRStatus) => {
       dispatch({ type: 'SET_OCR_STATUS', materialId, status })
     },
     []

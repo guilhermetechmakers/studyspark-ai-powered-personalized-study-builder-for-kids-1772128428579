@@ -19,7 +19,20 @@ export type StudyStatus =
   | 'approved'
   | 'exported'
 
-export type OCRStatus = 'not_started' | 'in_progress' | 'done'
+export type OCRStatus = 'not_started' | 'in_progress' | 'done' | 'failed'
+
+export interface SnippetPosition {
+  start: number
+  end: number
+}
+
+export interface Snippet {
+  id: string
+  text: string
+  confidence: number
+  important: boolean
+  position?: SnippetPosition
+}
 
 export interface TopicContext {
   topic: string
@@ -37,6 +50,8 @@ export interface Material {
   uploadedAt: string
   ocrStatus?: OCRStatus
   transcription?: string
+  ocrText?: string
+  ocrSnippets?: Snippet[]
   file?: File
   size?: number
 }

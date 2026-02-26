@@ -6,6 +6,7 @@ import { PasswordResetPage } from '@/pages/password-reset'
 import { DashboardOverview } from '@/pages/dashboard-overview'
 import { DashboardStudies } from '@/pages/dashboard-studies'
 import { CreateStudyWizard } from '@/pages/create-study-wizard'
+import { UploadMaterialsPage } from '@/pages/upload-materials'
 import { StudyDetailPage } from '@/pages/study-detail'
 import { StudyViewerPage } from '@/pages/study-viewer'
 import { SettingsPage } from '@/pages/settings'
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
       { path: 'studies', element: <DashboardStudies /> },
       { path: 'studies/:id', element: <StudyDetailPage /> },
       { path: 'create', element: <CreateStudyWizard /> },
+      { path: 'upload-materials', element: <UploadMaterialsPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
   },
