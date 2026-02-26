@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import {
   NotificationsPanel,
@@ -131,6 +132,15 @@ export function SettingsPageContainer() {
               settings={notifications}
               onSettingsChange={updateNotifications}
             />
+            <p className="mt-4 text-sm text-muted-foreground">
+              <Link
+                to="/dashboard/notifications/preferences"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Manage notification preferences
+              </Link>
+              {' '}for granular control over email, push, and unsubscribe settings.
+            </p>
           </AccordionContent>
         </AccordionItem>
 

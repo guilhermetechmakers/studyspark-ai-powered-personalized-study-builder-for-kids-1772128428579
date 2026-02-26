@@ -13,6 +13,7 @@ import {
   Sparkles,
   Bell,
   LogOut,
+  Mail,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ const adminNavItems = [
   { to: '/admin/moderation', label: 'Moderation', icon: ShieldCheck },
   { to: '/admin/plans', label: 'Plans', icon: CreditCard },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/admin/notifications', label: 'Notifications', icon: Mail },
   { to: '/admin/health', label: 'System Health', icon: Activity },
 ]
 

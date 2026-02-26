@@ -64,8 +64,10 @@ export function DashboardHeader() {
           <Plus className="h-5 w-5" />
           Create Study
         </Button>
-        <Button variant="ghost" size="icon" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" aria-label="Notifications" asChild>
+          <Link to="/dashboard/notifications">
+            <Bell className="h-5 w-5" />
+          </Link>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -34,6 +34,9 @@ import { AdminHealthPage } from '@/pages/admin-health'
 import { SearchRedirectPage } from '@/pages/search-redirect'
 import { ExportPage } from '@/pages/export-page'
 import { ExportProgressPage } from '@/pages/export-progress-page'
+import { NotificationCenterPage } from '@/pages/notification-center'
+import { NotificationPreferencesPage } from '@/pages/notification-preferences'
+import { AdminNotificationsPage } from '@/pages/admin-notifications'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 
 export const router = createBrowserRouter([
@@ -74,6 +77,8 @@ export const router = createBrowserRouter([
       { path: 'export', element: <ExportPage /> },
       { path: 'export-progress', element: <ExportProgressPage /> },
       { path: 'exports', element: <ExportProgressPage /> },
+      { path: 'notifications', element: <NotificationCenterPage /> },
+      { path: 'notifications/preferences', element: <NotificationPreferencesPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'checkout', element: <CheckoutPage /> },
       { path: 'analytics', element: <AnalyticsDashboardPage /> },
@@ -93,6 +98,7 @@ export const router = createBrowserRouter([
       { path: 'moderation', element: <AdminModerationPage /> },
       { path: 'plans', element: <AdminPlansPage /> },
       { path: 'analytics', element: <AdminAnalyticsPage /> },
+      { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'health', element: <AdminHealthPage /> },
     ],
   },

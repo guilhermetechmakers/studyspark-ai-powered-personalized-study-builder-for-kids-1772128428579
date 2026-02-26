@@ -17,6 +17,7 @@ import {
   BarChart3,
   FileDown,
   History,
+  Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -30,6 +31,7 @@ const navItems = [
   { to: '/dashboard/studies', label: 'Study Library', icon: FolderOpen },
   { to: '/dashboard/export', label: 'Export & Print', icon: FileDown },
   { to: '/dashboard/export-progress', label: 'Export History', icon: History },
+  { to: '/dashboard/notifications', label: 'Notifications', icon: Bell },
   { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/dashboard/create', label: 'Create Study', icon: PlusCircle },
   { to: '/dashboard/upload-materials', label: 'Upload Materials', icon: Upload },

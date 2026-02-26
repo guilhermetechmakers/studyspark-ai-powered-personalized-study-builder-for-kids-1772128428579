@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { Mail, Bell, MessageSquare } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Mail, Bell, MessageSquare, ExternalLink } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -98,6 +100,12 @@ export function NotificationsPanel({
               Choose how you want to be notified about study progress and updates
             </CardDescription>
           </div>
+          <Button variant="outline" size="sm" asChild className="rounded-full gap-1.5">
+            <Link to="/dashboard/notifications/preferences">
+              <ExternalLink className="h-4 w-4" />
+              Full preferences
+            </Link>
+          </Button>
           <Badge variant={enabledCount > 0 ? 'default' : 'secondary'}>
             {enabledCount} channel{enabledCount !== 1 ? 's' : ''} on
           </Badge>
