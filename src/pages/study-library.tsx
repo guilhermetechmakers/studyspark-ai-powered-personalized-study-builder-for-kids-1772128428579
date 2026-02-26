@@ -438,10 +438,17 @@ export function StudyLibraryPage() {
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <SearchBar
-                value={filters.search}
-                onChange={(v) => setFilters((prev) => ({ ...prev, search: v }))}
-              />
+              <div className="flex flex-1 gap-2">
+                <SearchBar
+                  value={filters.search}
+                  onChange={(v) => setFilters((prev) => ({ ...prev, search: v }))}
+                />
+                <Button variant="outline" size="sm" className="shrink-0 rounded-full" asChild>
+                  <Link to={`/dashboard/search${filters.search ? `?q=${encodeURIComponent(filters.search)}` : ''}`}>
+                    Search all
+                  </Link>
+                </Button>
+              </div>
               <div className="flex gap-2">
                 <Button
                   variant={view === 'grid' ? 'secondary' : 'ghost'}

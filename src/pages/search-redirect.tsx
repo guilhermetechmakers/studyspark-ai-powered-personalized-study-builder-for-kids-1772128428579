@@ -22,7 +22,7 @@ export function SearchRedirectPage() {
     if (trimmed.length > 0) {
       const encoded = encodeURIComponent(trimmed)
       if (isAuthenticated) {
-        navigate(`/dashboard/studies?q=${encoded}`, { replace: true })
+        navigate(`/dashboard/search?q=${encoded}`, { replace: true })
       } else {
         navigate(`/about-help?q=${encoded}`, { replace: true })
       }

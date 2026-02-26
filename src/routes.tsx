@@ -41,6 +41,7 @@ import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
 import { SearchRedirectPage } from '@/pages/search-redirect'
+import { SearchPage } from '@/pages/search-page'
 import { ExportPage } from '@/pages/export-page'
 import { ExportProgressPage } from '@/pages/export-progress-page'
 import { NotificationCenterPage } from '@/pages/notification-center'
@@ -77,6 +78,7 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardOverview /> },
       { path: 'profile', element: <ProfileDashboardPage /> },
       { path: 'children', element: <ChildManagementPage /> },
+      { path: 'search', element: <SearchPage /> },
       { path: 'studies', element: <StudyLibraryPage /> },
       { path: 'analytics', element: <AnalyticsDashboardPage /> },
       { path: 'studies/:id', element: <StudyReviewPage /> },

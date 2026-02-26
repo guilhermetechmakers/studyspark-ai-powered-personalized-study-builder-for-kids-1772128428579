@@ -19,6 +19,7 @@ import {
   FileDown,
   History,
   Bell,
+  Search,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -29,7 +30,9 @@ const navItems = [
   { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { to: '/dashboard/profile', label: 'Profile', icon: User },
   { to: '/dashboard/children', label: 'Children', icon: Users },
+  { to: '/dashboard/search', label: 'Search', icon: Search },
   { to: '/dashboard/studies', label: 'Study Library', icon: FolderOpen },
+  { to: '/dashboard/search', label: 'Search', icon: Search },
   { to: '/dashboard/export', label: 'Export & Print', icon: FileDown },
   { to: '/dashboard/export-progress', label: 'Export History', icon: History },
   { to: '/dashboard/notifications', label: 'Notifications', icon: Bell },
