@@ -5,6 +5,8 @@ import { VerifyEmailPage } from '@/pages/verify-email'
 import { PasswordResetPage } from '@/pages/password-reset'
 import { AuthCallbackPage } from '@/pages/auth-callback'
 import { DashboardOverview } from '@/pages/dashboard-overview'
+import { ProfileDashboardPage } from '@/pages/profile-dashboard'
+import { ChildManagementPage } from '@/pages/child-management'
 import { StudyLibraryPage } from '@/pages/study-library'
 import { CreateStudyWizard } from '@/pages/create-study-wizard'
 import { UploadMaterialsPage } from '@/pages/upload-materials'
@@ -58,6 +60,8 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <DashboardOverview /> },
+      { path: 'profile', element: <ProfileDashboardPage /> },
+      { path: 'children', element: <ChildManagementPage /> },
       { path: 'studies', element: <StudyLibraryPage /> },
       { path: 'studies/:id', element: <StudyReviewPage /> },
       { path: 'studies/:id/detail', element: <StudyDetailPage /> },

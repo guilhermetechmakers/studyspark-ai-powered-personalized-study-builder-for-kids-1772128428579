@@ -13,15 +13,23 @@ export interface ParentAccount {
   profileCompletion: number
 }
 
+/** @deprecated Use ChildProfile from @/types/profile */
 export interface ChildProfile {
   id: string
   parentId?: string
+  userId?: string
   name: string
   age: number
   grade: string
-  learningStyle: LearningStyle
+  learningStyle?: LearningStyle
+  learningPreferences?: string[]
   avatarUrl?: string
   preferences?: Record<string, unknown>
+}
+
+/** Normalized child profile for settings (supports both legacy and new format) */
+export type ChildProfileFormData = ChildProfile & {
+  learningPreferences: string[]
 }
 
 export interface NotificationChannel {

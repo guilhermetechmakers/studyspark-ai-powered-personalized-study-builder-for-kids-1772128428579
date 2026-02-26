@@ -84,7 +84,7 @@ export function ChildProfilesManager({ profiles, onProfilesChange }: ChildProfil
       name: `${child.name} (copy)`,
       age: child.age,
       grade: child.grade,
-      learningStyle: child.learningStyle,
+      learningStyle: child.learningStyle ?? 'playful',
     }
     setSaving(true)
     try {

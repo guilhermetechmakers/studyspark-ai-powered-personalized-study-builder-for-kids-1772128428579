@@ -15,6 +15,7 @@ import {
   fetchPrivacyConsents,
   requestDataDeletion,
 } from '@/api/settings'
+import { supabase } from '@/lib/supabase'
 import { dataGuard } from '@/lib/data-guard'
 import type {
   ParentAccount,
@@ -211,8 +212,14 @@ export function useSettingsData() {
   }, [])
 
   const handleDeleteAccount = useCallback(async () => {
-    await requestDataDeletion()
-    toast.success('Account deletion requested. We will contact you to confirm.')
+    const ok = await requestDataDeletion()
+    if (ok) {
+      toast.success('Account deletion complete. You have been signed out.')
+      await supabase.auth.signOut()
+      window.location.href = '/'
+    } else {
+      toast.error('Failed to delete account. Please try again or contact support.')
+    }
   }, [])
 
   return {

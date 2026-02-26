@@ -1,7 +1,7 @@
 /**
  * Settings API - fetches and updates parent, child, notifications,
  * integrations, billing, and privacy data.
- * Uses native fetch via lib/api.ts. All responses validated with safe defaults.
+ * Uses Supabase for profile/child when authenticated; else native fetch via lib/api.ts.
  */
 
 import {
@@ -11,6 +11,15 @@ import {
   apiDelete,
   type ApiError,
 } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
+import {
+  fetchUserProfile,
+  updateUserProfile,
+  fetchChildProfiles as fetchChildProfilesFromProfile,
+  createChildProfile as createChildProfileFromProfile,
+  updateChildProfile as updateChildProfileFromProfile,
+  deleteChildProfile as deleteChildProfileFromProfile,
+} from '@/api/profile'
 import { asArray } from '@/lib/data-guard'
 import type {
   ParentAccount,
@@ -169,7 +178,19 @@ function safePrivacySettings(data: unknown): PrivacySettings {
   }
 }
 
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user?.id ?? null
+}
+
 export async function fetchParent(): Promise<ParentAccount | null> {
+  const userId = await getCurrentUserId()
+  if (userId) {
+    const profile = await fetchUserProfile()
+    if (profile) {
+      return { id: profile.id, name: profile.name, email: profile.email, profileCompletion: 75 }
+    }
+  }
   try {
     const data = await apiGet<unknown>('/api/settings/parent')
     return safeParent(data)
@@ -179,6 +200,13 @@ export async function fetchParent(): Promise<ParentAccount | null> {
 }
 
 export async function updateParent(payload: { name?: string; email?: string }): Promise<ParentAccount | null> {
+  const userId = await getCurrentUserId()
+  if (userId) {
+    const updated = await updateUserProfile(payload)
+    if (updated) {
+      return { id: updated.id, name: updated.name, email: updated.email, profileCompletion: 75 }
+    }
+  }
   try {
     const data = await apiPut<unknown>('/api/settings/parent', payload)
     return safeParent(data)
@@ -188,6 +216,18 @@ export async function updateParent(payload: { name?: string; email?: string }): 
 }
 
 export async function fetchChildProfiles(): Promise<ChildProfile[]> {
+  const userId = await getCurrentUserId()
+  if (userId) {
+    const children = await fetchChildProfilesFromProfile()
+    return (children ?? []).map((c) => ({
+      id: c.id,
+      parentId: c.userId,
+      name: c.name,
+      age: c.age,
+      grade: c.grade,
+      learningStyle: (c.learningPreferences?.[0] ?? 'playful') as ChildProfile['learningStyle'],
+    }))
+  }
   try {
     const res = await apiGet<unknown>('/api/settings/child')
     const list = Array.isArray(res) ? res : Array.isArray((res as Record<string, unknown>)?.profiles)
@@ -201,7 +241,62 @@ export async function fetchChildProfiles(): Promise<ChildProfile[]> {
   }
 }
 
+function toProfileChildPayload(payload: {
+  name: string
+  age: number
+  grade: string
+  learningStyle?: string
+  learningPreferences?: string[]
+}): { name: string; age: number; grade: string; learningPreferences: string[] } {
+  const valid = ['Playful', 'Exam-like', 'Research-based', 'Printable', 'Interactive']
+  const prefs = Array.isArray(payload.learningPreferences) && payload.learningPreferences.length > 0
+    ? payload.learningPreferences.filter((p) => valid.includes(p))
+    : []
+  if (prefs.length > 0) {
+    return {
+      name: payload.name,
+      age: Math.min(18, Math.max(4, payload.age)),
+      grade: payload.grade || 'K',
+      learningPreferences: prefs,
+    }
+  }
+  const style = payload.learningStyle ?? 'playful'
+  const mapped =
+    style === 'playful'
+      ? 'Playful'
+      : style === 'exam-like'
+        ? 'Exam-like'
+        : style === 'research-based'
+          ? 'Research-based'
+          : style === 'printable'
+            ? 'Printable'
+            : style === 'interactive'
+              ? 'Interactive'
+              : 'Playful'
+  return {
+    name: payload.name,
+    age: Math.min(18, Math.max(4, payload.age)),
+    grade: payload.grade || 'K',
+    learningPreferences: valid.includes(mapped) ? [mapped] : ['Playful'],
+  }
+}
+
 export async function createChildProfile(payload: Omit<ChildProfile, 'id' | 'parentId'>): Promise<ChildProfile | null> {
+  const userId = await getCurrentUserId()
+  if (userId) {
+    const profilePayload = toProfileChildPayload(payload)
+    const created = await createChildProfileFromProfile(profilePayload)
+    if (created) {
+      return {
+        id: created.id,
+        parentId: created.userId,
+        name: created.name,
+        age: created.age,
+        grade: created.grade,
+        learningStyle: (created.learningPreferences?.[0] ?? 'playful') as ChildProfile['learningStyle'],
+      }
+    }
+  }
   try {
     const data = await apiPost<unknown>('/api/settings/child', payload)
     return safeChild(data)
@@ -214,6 +309,27 @@ export async function updateChildProfile(
   id: string,
   payload: Partial<Omit<ChildProfile, 'id' | 'parentId'>>
 ): Promise<ChildProfile | null> {
+  const userId = await getCurrentUserId()
+  if (userId) {
+    const profilePayload = toProfileChildPayload(payload as Parameters<typeof toProfileChildPayload>[0])
+    const updatePayload: Partial<{ name: string; age: number; grade: string; learningPreferences: string[] }> = {}
+    if (payload.name !== undefined) updatePayload.name = payload.name
+    if (payload.age !== undefined) updatePayload.age = payload.age
+    if (payload.grade !== undefined) updatePayload.grade = payload.grade
+    if (profilePayload.learningPreferences?.length)
+      updatePayload.learningPreferences = profilePayload.learningPreferences
+    const updated = await updateChildProfileFromProfile(id, updatePayload)
+    if (updated) {
+      return {
+        id: updated.id,
+        parentId: updated.userId,
+        name: updated.name,
+        age: updated.age,
+        grade: updated.grade,
+        learningStyle: (updated.learningPreferences?.[0] ?? 'playful') as ChildProfile['learningStyle'],
+      }
+    }
+  }
   try {
     const data = await apiPut<unknown>(`/api/settings/child/${id}`, payload)
     return safeChild(data)
@@ -223,6 +339,11 @@ export async function updateChildProfile(
 }
 
 export async function deleteChildProfile(id: string): Promise<boolean> {
+  const userId = await getCurrentUserId()
+  if (userId) {
+    const ok = await deleteChildProfileFromProfile(id)
+    if (ok) return true
+  }
   try {
     await apiDelete(`/api/settings/child/${id}`)
     return true
@@ -360,6 +481,25 @@ export async function requestDataExport(): Promise<DataExportRequest | null> {
 }
 
 export async function requestDataDeletion(): Promise<boolean> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? ''
+  if (supabaseUrl) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      if (!token) return false
+      const res = await fetch(`${supabaseUrl}/functions/v1/privacy-delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const data = (await res.json().catch(() => ({}))) as { success?: boolean }
+      return Boolean(data?.success)
+    } catch {
+      return false
+    }
+  }
   try {
     await apiPost('/api/privacy/delete')
     return true

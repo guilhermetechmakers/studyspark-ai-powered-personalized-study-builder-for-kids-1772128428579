@@ -16,7 +16,7 @@ export interface ConfirmationModalProps {
   confirmLabel?: string
   cancelLabel?: string
   variant?: 'default' | 'destructive'
-  onConfirm: () => void | Promise<void>
+  onConfirm: () => void | Promise<void | boolean>
   isLoading?: boolean
 }
 

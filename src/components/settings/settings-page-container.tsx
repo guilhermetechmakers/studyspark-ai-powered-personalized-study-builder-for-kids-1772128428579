@@ -1,7 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import {
-  ProfileHeader,
-  ChildProfilesManager,
   NotificationsPanel,
   IntegrationsPanel,
   BillingPanel,
@@ -9,12 +7,17 @@ import {
   AccountSecurityPanel,
   SettingsSkeleton,
 } from '@/components/settings'
+import {
+  ProfileHeaderCard,
+  ChildManagementPanel,
+  ExportButton,
+} from '@/components/profile'
 import { useSettingsData } from '@/hooks/use-settings-data'
+import { useProfileData } from '@/hooks/use-profile-data'
 
 export function SettingsPageContainer() {
   const {
     parent,
-    profiles,
     notifications,
     integrations,
     billing,
@@ -22,8 +25,6 @@ export function SettingsPageContainer() {
     privacy,
     exportRequests,
     isLoading,
-    updateParent,
-    setProfiles,
     updateNotifications,
     connectIntegration,
     disconnectIntegration,
@@ -34,7 +35,37 @@ export function SettingsPageContainer() {
     refetch,
   } = useSettingsData()
 
-  if (isLoading) {
+  const {
+    userProfile,
+    children,
+    isLoading: profileLoading,
+    updateProfile,
+    addChild,
+    updateChild,
+    removeChild,
+    exportJson,
+    exportCsv,
+    requestPrivacyDeletion,
+  } = useProfileData()
+
+  const profileForHeader = userProfile ?? (parent ? {
+    id: parent.id,
+    name: parent.name,
+    email: parent.email,
+    createdAt: '',
+    updatedAt: '',
+  } : null)
+
+  const handleChangePassword = () => {
+    changePassword()
+  }
+
+  const handleDeleteAccount = async () => {
+    await requestPrivacyDeletion()
+    if (!userProfile) await deleteAccount()
+  }
+
+  if (isLoading && profileLoading) {
     return <SettingsSkeleton />
   }
 
@@ -43,21 +74,28 @@ export function SettingsPageContainer() {
       className="container mx-auto max-w-4xl space-y-6 p-4 animate-fade-in sm:p-6"
       aria-labelledby="settings-heading"
     >
-      <div>
-        <h1 className="text-2xl font-bold text-foreground md:text-3xl" id="settings-heading">
-          Settings & preferences
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Manage your account, children, notifications, and more
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl" id="settings-heading">
+            Settings & preferences
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            Manage your account, children, notifications, and more
+          </p>
+        </div>
+        <ExportButton
+          onExportJson={exportJson}
+          onExportCsv={exportCsv}
+          disabled={profileLoading}
+        />
       </div>
 
-      <ProfileHeader
-        parent={parent}
-        onUpdateParent={updateParent}
-        onChangePassword={changePassword}
-        onDeleteAccount={deleteAccount}
-        isLoading={isLoading}
+      <ProfileHeaderCard
+        profile={profileForHeader}
+        onUpdateProfile={updateProfile}
+        onChangePassword={handleChangePassword}
+        onDeleteAccount={handleDeleteAccount}
+        isLoading={profileLoading}
       />
 
       <Accordion type="multiple" defaultValue={['account', 'children', 'notifications', 'integrations', 'billing', 'privacy']} className="space-y-4">
@@ -75,9 +113,11 @@ export function SettingsPageContainer() {
             <span className="text-lg font-semibold">Child profiles</span>
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-6 pt-0">
-            <ChildProfilesManager
-              profiles={profiles}
-              onProfilesChange={setProfiles}
+            <ChildManagementPanel
+              children={children ?? []}
+              onAddChild={addChild}
+              onUpdateChild={updateChild}
+              onDeleteChild={removeChild}
             />
           </AccordionContent>
         </AccordionItem>
