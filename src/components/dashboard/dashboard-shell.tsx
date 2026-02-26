@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export interface DashboardShellProps {
+interface DashboardShellProps {
   children: React.ReactNode
   className?: string
 }
@@ -13,7 +13,9 @@ export function DashboardShell({ children, className }: DashboardShellProps) {
         className
       )}
     >
-      {children}
+      <main className="flex-1" role="main">
+        {children}
+      </main>
     </div>
   )
 }

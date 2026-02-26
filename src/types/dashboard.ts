@@ -1,7 +1,4 @@
-/**
- * Dashboard data types for parent dashboard.
- * All arrays must be guarded with data ?? [] and Array.isArray()
- */
+/** Dashboard data models and UI state types */
 
 export interface Child {
   id: string
@@ -12,13 +9,11 @@ export interface Child {
   lastActive?: string
 }
 
-export type StudyStatus = 'saved' | 'completed' | 'in-progress'
-
 export interface Study {
   id: string
   title: string
   updatedAt: string
-  status: StudyStatus
+  status: 'saved' | 'completed' | 'in-progress'
 }
 
 export interface Recommendation {
@@ -28,17 +23,8 @@ export interface Recommendation {
   notes?: string
 }
 
-export interface DashboardUIState {
+export interface UIState {
   isLoading: boolean
-  isLoadingChildren: boolean
-  isLoadingStudies: boolean
-  isLoadingRecommendations: boolean
-  hasError: boolean
-  errorMessage?: string
-}
-
-export interface DashboardData {
-  children?: Child[]
-  studies?: Study[]
-  recommendations?: Recommendation[]
+  isEmpty: boolean
+  error?: string
 }

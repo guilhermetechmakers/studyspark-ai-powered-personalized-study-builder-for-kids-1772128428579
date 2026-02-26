@@ -18,27 +18,31 @@ export function DashboardOverview() {
     studies,
     recommendations,
     isLoading,
-    addStudy,
-    removeRecommendation,
+    setStudies,
+    setRecommendations,
   } = useDashboardData()
 
   const handleSaveRecommendation = (rec: Recommendation) => {
-    addStudy({
+    const newStudy: Study = {
       id: `rec-${rec.id}`,
       title: rec.topic,
       updatedAt: 'Just now',
       status: 'saved',
-    })
-    removeRecommendation(rec.id)
+    }
+    setStudies((prev) => [newStudy, ...(Array.isArray(prev) ? prev : [])])
+    setRecommendations((prev) =>
+      (Array.isArray(prev) ? prev : []).filter((r) => r.id !== rec.id)
+    )
   }
 
   const handleDuplicateStudy = (study: Study) => {
-    addStudy({
+    const newStudy: Study = {
       id: `dup-${Date.now()}`,
       title: `${study.title} (copy)`,
       updatedAt: 'Just now',
       status: 'saved',
-    })
+    }
+    setStudies((prev) => [newStudy, ...(Array.isArray(prev) ? prev : [])])
   }
 
   return (

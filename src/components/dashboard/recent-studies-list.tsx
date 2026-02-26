@@ -5,22 +5,40 @@ import {
   Share2,
   Download,
   ChevronRight,
+  MoreHorizontal,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import type { Study } from '@/types/dashboard'
-import { dataGuard } from '@/lib/data-guard'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
+import type { Study } from '@/types/dashboard'
+import { cn } from '@/lib/utils'
 
-export interface RecentStudiesListProps {
+const STATUS_LABELS: Record<Study['status'], string> = {
+  saved: 'Saved',
+  completed: 'Completed',
+  'in-progress': 'In Progress',
+}
+
+const STATUS_COLORS: Record<Study['status'], string> = {
+  saved: 'bg-primary/10 text-primary',
+  completed: 'bg-green-500/10 text-green-600',
+  'in-progress': 'bg-[rgb(var(--tangerine))]/20 text-[rgb(var(--tangerine))]',
+}
+
+interface RecentStudiesListProps {
   studies: Study[]
   isLoading?: boolean
   onOpen?: (study: Study) => void
   onDuplicate?: (study: Study) => void
   onShare?: (study: Study) => void
   onExport?: (study: Study) => void
-  className?: string
 }
 
 export function RecentStudiesList({
@@ -30,13 +48,8 @@ export function RecentStudiesList({
   onDuplicate,
   onShare,
   onExport,
-  className,
 }: RecentStudiesListProps) {
-  const safeStudies = dataGuard(studies)
-
-  const handleOpen = (study: Study) => {
-    onOpen?.(study)
-  }
+  const list = Array.isArray(studies) ? studies : []
 
   const handleDuplicate = (study: Study) => {
     onDuplicate?.(study)
@@ -55,34 +68,28 @@ export function RecentStudiesList({
 
   if (isLoading) {
     return (
-      <Card className={className}>
+      <Card>
         <CardHeader>
-          <div className="h-6 w-32 animate-pulse rounded bg-muted" />
-          <div className="mt-1 h-4 w-48 animate-pulse rounded bg-muted" />
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-48" />
         </CardHeader>
-        <CardContent className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-20 animate-pulse rounded-xl bg-muted"
-            />
-          ))}
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            ))}
+          </div>
         </CardContent>
       </Card>
     )
   }
 
-  if (safeStudies.length === 0) {
+  if (list.length === 0) {
     return (
-      <Card
-        className={cn(
-          'border-dashed border-2 border-border bg-gradient-to-br from-[rgb(var(--lavender))]/10 to-transparent',
-          className
-        )}
-      >
+      <Card className="border-dashed border-2">
         <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <BookOpen className="h-8 w-8 text-primary" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+            <BookOpen className="h-8 w-8 text-muted-foreground" />
           </div>
           <div className="text-center">
             <h3 className="font-semibold text-foreground">No studies yet</h3>
@@ -90,11 +97,8 @@ export function RecentStudiesList({
               Create your first study to get started.
             </p>
           </div>
-          <Button asChild className="rounded-full">
-            <Link to="/dashboard/create">
-              Create Study
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Link>
+          <Button asChild>
+            <Link to="/dashboard/create">Create Study</Link>
           </Button>
         </CardContent>
       </Card>
@@ -102,78 +106,78 @@ export function RecentStudiesList({
   }
 
   return (
-    <Card className={className}>
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Recent Studies</h3>
-          <p className="text-sm text-muted-foreground">Your latest study sets</p>
+          <CardTitle>Recent Studies</CardTitle>
+          <CardDescription>Your latest study sets</CardDescription>
         </div>
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/dashboard/studies" className="rounded-full">
-            View all
-          </Link>
+          <Link to="/dashboard/studies">View all</Link>
         </Button>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-3" role="list">
-          {safeStudies.map((study) => (
-            <li
+        <div className="space-y-3">
+          {list.map((study) => (
+            <div
               key={study.id}
-              className="group flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm"
+              className="group flex items-center justify-between gap-4 rounded-xl border border-border p-4 transition-all duration-200 hover:bg-muted/50 hover:shadow-sm"
             >
               <Link
                 to={`/dashboard/studies/${study.id}`}
                 className="min-w-0 flex-1"
+                onClick={() => onOpen?.(study)}
               >
-                <p className="font-medium text-foreground truncate">{study.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {study.updatedAt} · {study.status}
-                </p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{study.title}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span
+                        className={cn(
+                          'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                          STATUS_COLORS[study.status]
+                        )}
+                      >
+                        {STATUS_LABELS[study.status]}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{study.updatedAt}</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </div>
               </Link>
-              <div className="flex shrink-0 items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                  onClick={() => handleOpen(study)}
-                  aria-label={`Open ${study.title}`}
-                  asChild
-                >
-                  <Link to={`/dashboard/studies/${study.id}`}>
-                    <BookOpen className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                  onClick={() => handleDuplicate(study)}
-                  aria-label={`Duplicate ${study.title}`}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                  onClick={() => handleShare(study)}
-                  aria-label={`Share ${study.title}`}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                  onClick={() => handleExport(study)}
-                  aria-label={`Export ${study.title}`}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
-            </li>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    aria-label="Study actions"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to={`/dashboard/studies/${study.id}`}>Open</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDuplicate(study)}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleShare(study)}>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport(study)}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ))}
-        </ul>
+        </div>
       </CardContent>
     </Card>
   )

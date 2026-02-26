@@ -1,30 +1,25 @@
 import { Link } from 'react-router-dom'
-import { cn } from '@/lib/utils'
+import { Sparkles } from 'lucide-react'
 
 const footerLinks = [
   { label: 'Help', href: '/help' },
+  { label: 'About', href: '/about' },
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms', href: '/terms' },
 ]
 
-export interface DashboardFooterProps {
-  className?: string
-}
-
-export function DashboardFooter({ className }: DashboardFooterProps) {
+export function DashboardFooter() {
   return (
     <footer
-      className={cn(
-        'mt-auto border-t border-border bg-card/50 py-6',
-        className
-      )}
+      className="mt-auto border-t border-border bg-card/50 px-6 py-4"
       role="contentinfo"
     >
-      <div className="flex flex-col items-center justify-between gap-4 px-6 md:flex-row">
-        <p className="text-sm text-muted-foreground">
-          © {new Date().getFullYear()} StudySpark. All rights reserved.
-        </p>
-        <nav className="flex items-center gap-6" aria-label="Footer navigation">
+      <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <Sparkles className="h-4 w-4" />
+          <span>StudySpark</span>
+        </Link>
+        <nav className="flex flex-wrap items-center justify-center gap-4" aria-label="Footer navigation">
           {footerLinks.map((link) => (
             <Link
               key={link.href}

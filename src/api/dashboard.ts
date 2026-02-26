@@ -1,28 +1,22 @@
-/**
- * Dashboard API - fetches children, studies, and recommendations.
- * Returns [] for empty results; all responses are validated.
- */
-
 import { apiGet } from '@/lib/api'
-import { asArray } from '@/lib/data-guard'
 import type { Child, Study, Recommendation } from '@/types/dashboard'
 
-export interface DashboardChildrenResponse {
+interface ChildrenResponse {
   data?: Child[]
 }
 
-export interface DashboardStudiesResponse {
+interface StudiesResponse {
   data?: Study[]
 }
 
-export interface DashboardRecommendationsResponse {
+interface RecommendationsResponse {
   data?: Recommendation[]
 }
 
 export async function fetchChildren(): Promise<Child[]> {
   try {
-    const response = await apiGet<DashboardChildrenResponse>('/api/dashboard/children')
-    return asArray<Child>(response?.data)
+    const res = await apiGet<ChildrenResponse>('/api/dashboard/children')
+    return Array.isArray(res?.data) ? res.data : []
   } catch {
     return []
   }
@@ -30,10 +24,8 @@ export async function fetchChildren(): Promise<Child[]> {
 
 export async function fetchStudies(limit = 10): Promise<Study[]> {
   try {
-    const response = await apiGet<DashboardStudiesResponse>(
-      `/api/dashboard/studies?limit=${limit}`
-    )
-    return asArray<Study>(response?.data)
+    const res = await apiGet<StudiesResponse>(`/api/dashboard/studies?limit=${limit}`)
+    return Array.isArray(res?.data) ? res.data : []
   } catch {
     return []
   }
@@ -41,10 +33,8 @@ export async function fetchStudies(limit = 10): Promise<Study[]> {
 
 export async function fetchRecommendations(): Promise<Recommendation[]> {
   try {
-    const response = await apiGet<DashboardRecommendationsResponse>(
-      '/api/dashboard/recommendations'
-    )
-    return asArray<Recommendation>(response?.data)
+    const res = await apiGet<RecommendationsResponse>('/api/dashboard/recommendations')
+    return Array.isArray(res?.data) ? res.data : []
   } catch {
     return []
   }

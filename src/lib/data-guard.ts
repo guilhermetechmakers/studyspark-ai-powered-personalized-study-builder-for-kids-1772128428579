@@ -49,3 +49,21 @@ export function safeReduce<T, U>(
 ): U {
   return (items ?? []).reduce(fn, initial)
 }
+
+/**
+ * Normalizes API response to ensure array data.
+ * Use for: const list = normalizeApiResponse(response?.data)
+ */
+export function normalizeApiResponse<T>(response: unknown): T[] {
+  return Array.isArray(response) ? (response as T[]) : []
+}
+
+/**
+ * Safe array map alias (same as safeMap).
+ */
+export const safeArrayMap = safeMap
+
+/**
+ * Safe array filter alias (same as safeFilter).
+ */
+export const safeArrayFilter = safeFilter
