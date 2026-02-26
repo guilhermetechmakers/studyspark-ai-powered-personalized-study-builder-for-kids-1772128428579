@@ -36,6 +36,12 @@ export function LandingHeader() {
           >
             FAQ
           </Link>
+          <Link
+            to="/about-help"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Help
+          </Link>
         </nav>
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild>

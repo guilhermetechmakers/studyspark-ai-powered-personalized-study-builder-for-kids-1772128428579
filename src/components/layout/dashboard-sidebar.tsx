@@ -10,6 +10,7 @@ import {
   Sparkles,
   Upload,
   ShoppingCart,
+  HelpCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ const navItems = [
 ]
 
 const bottomItems = [
+  { to: '/about-help', label: 'Help', icon: HelpCircle },
   { to: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 

@@ -1,0 +1,6 @@
+export { AboutHeroSection } from './about-hero-section'
+export { HelpCenter } from './help-center'
+export { TutorialsGallery } from './tutorials-gallery'
+export { OnboardingGuides } from './onboarding-guides'
+export { SupportForm } from './support-form'
+export { FeedbackCommunityLink } from './feedback-community-link'

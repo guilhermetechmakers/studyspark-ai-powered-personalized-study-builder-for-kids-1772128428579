@@ -44,7 +44,7 @@ export function HelpWidget({ className }: HelpWidgetProps) {
             Check out our help center for guides and FAQs.
           </p>
           <Button asChild className="mt-4 w-full" size="sm">
-            <Link to="/help">Help Center</Link>
+            <Link to="/about-help">Help Center</Link>
           </Button>
         </div>
       )}

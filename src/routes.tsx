@@ -14,7 +14,7 @@ import { SettingsPage } from '@/pages/settings'
 import { CheckoutPage } from '@/pages/checkout'
 import { NotFoundPage } from '@/pages/not-found'
 import { ErrorPage } from '@/pages/error'
-import { HelpPage } from '@/pages/help'
+import { AboutHelpPage } from '@/pages/about-help'
 import { LegalPage } from '@/pages/legal'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 
@@ -63,8 +63,9 @@ export const router = createBrowserRouter([
   { path: '/verify-email', element: <VerifyEmailPage /> },
   { path: '/forgot-password', element: <PasswordResetPage /> },
   { path: '/password-reset', element: <PasswordResetPage /> },
-  { path: '/help', element: <HelpPage /> },
-  { path: '/about', element: <HelpPage /> },
+  { path: '/help', element: <AboutHelpPage /> },
+  { path: '/about', element: <AboutHelpPage /> },
+  { path: '/about-help', element: <AboutHelpPage /> },
   { path: '/privacy', element: <LegalPage title="Privacy Policy" content={privacyContent} /> },
   { path: '/terms', element: <LegalPage title="Terms of Service" content={termsContent} /> },
   { path: '/cookies', element: <LegalPage title="Cookie Policy" content={cookiesContent} /> },
