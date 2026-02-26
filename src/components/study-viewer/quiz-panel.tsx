@@ -1,17 +1,19 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { Lightbulb, Check, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ReadAloudController } from './read-aloud-controller'
+import { HintSystem } from './hint-system'
 import { cn } from '@/lib/utils'
 import type { Question, TextSizeLevel } from '@/types/study-viewer'
 
 interface QuizPanelProps {
   questions: Question[] | null | undefined
   onSubmit?: (questionId: string, correct: boolean) => void
+  onHintUse?: () => void
   readAloudEnabled?: boolean
   textSize?: TextSizeLevel
   highContrast?: boolean
@@ -27,6 +29,7 @@ const textSizeClasses: Record<TextSizeLevel, string> = {
 export function QuizPanel({
   questions: questionsProp,
   onSubmit,
+  onHintUse,
   readAloudEnabled = false,
   textSize = 'normal',
   highContrast = false,
@@ -38,7 +41,6 @@ export function QuizPanel({
   const [fillValue, setFillValue] = useState('')
   const [dragOrder, setDragOrder] = useState<string[]>([])
   const [showFeedback, setShowFeedback] = useState(false)
-  const [showHint, setShowHint] = useState(false)
 
   const currentQuestion = questions[currentQuestionIndex] ?? null
   const total = questions.length
@@ -48,7 +50,6 @@ export function QuizPanel({
     const opts = currentQuestion?.options ?? []
     setDragOrder(Array.isArray(opts) ? [...opts] : [])
     setShowFeedback(false)
-    setShowHint(false)
     setFillValue('')
   }, [currentQuestion?.id, currentQuestion?.options])
 
@@ -89,7 +90,6 @@ export function QuizPanel({
       setFillValue('')
       setDragOrder((currentQuestion?.options ?? []).slice())
       setShowFeedback(false)
-      setShowHint(false)
     }
   }, [currentQuestionIndex, total, currentQuestion?.options])
 
@@ -97,7 +97,6 @@ export function QuizPanel({
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex((i) => i - 1)
       setShowFeedback(false)
-      setShowHint(false)
     }
   }, [currentQuestionIndex])
 
@@ -130,24 +129,15 @@ export function QuizPanel({
               {currentQuestion?.prompt ?? ''}
             </p>
             {readAloudEnabled && (
-              <ReadAloudController text={currentQuestion?.prompt ?? ''} disabled={showFeedback} />
+              <ReadAloudController text={currentQuestion?.prompt ?? ''} disabled={showFeedback} showRateControl />
             )}
             {currentQuestion?.hint && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowHint(!showHint)}
-                className="gap-2 rounded-xl"
-                aria-label="Toggle hint"
-              >
-                <Lightbulb className="h-4 w-4" />
-                Hint
-              </Button>
-            )}
-            {showHint && currentQuestion?.hint && (
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-                <p className="text-sm text-foreground">{currentQuestion.hint}</p>
-              </div>
+              <HintSystem
+                key={currentQuestion.id}
+                hint={currentQuestion.hint}
+                onUse={onHintUse}
+                disabled={showFeedback}
+              />
             )}
           </div>
 

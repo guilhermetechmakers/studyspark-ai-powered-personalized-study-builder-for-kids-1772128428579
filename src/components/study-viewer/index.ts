@@ -1,4 +1,5 @@
 export { StudyViewerContainer } from './study-viewer-container'
+export { HintSystem } from './hint-system'
 export { ActivityCarousel } from './activity-carousel'
 export { FlashcardsPanel } from './flashcards-panel'
 export { QuizPanel } from './quiz-panel'

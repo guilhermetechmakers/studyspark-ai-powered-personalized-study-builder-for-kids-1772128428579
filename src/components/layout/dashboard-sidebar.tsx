@@ -14,6 +14,7 @@ import {
   Shield,
   User,
   Users,
+  BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,8 @@ const navItems = [
   { to: '/dashboard/profile', label: 'Profile', icon: User },
   { to: '/dashboard/children', label: 'Children', icon: Users },
   { to: '/dashboard/studies', label: 'Study Library', icon: FolderOpen },
+  { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/dashboard/analytics', label: 'Progress & Analytics', icon: BarChart3 },
   { to: '/dashboard/create', label: 'Create Study', icon: PlusCircle },
   { to: '/dashboard/upload-materials', label: 'Upload Materials', icon: Upload },
   { to: '/dashboard/checkout', label: 'Checkout', icon: ShoppingCart },

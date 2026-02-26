@@ -28,6 +28,13 @@ interface StudyViewerContainerProps {
   mode?: 'flashcards' | 'quizzes' | 'lessons'
   onComplete?: () => void
   onParentToggle?: (open: boolean) => void
+  sessionToken?: string | null
+  onAttemptSubmit?: (params: {
+    activityId: string
+    score: number
+    timeSpentMs: number
+    hintsUsed: number
+  }) => Promise<void>
   className?: string
 }
 
@@ -44,6 +51,8 @@ export function StudyViewerContainer({
   studySet: studySetProp,
   onComplete,
   onParentToggle,
+  sessionToken,
+  onAttemptSubmit,
   className,
 }: StudyViewerContainerProps) {
   const activities = useMemo(
@@ -63,6 +72,8 @@ export function StudyViewerContainer({
   const [highContrast, setHighContrast] = useState(false)
   const [readAloudEnabled, setReadAloudEnabled] = useState(false)
   const [sessionStartTime] = useState(Date.now())
+  const [activityStartTime, setActivityStartTime] = useState(Date.now())
+  const [hintsUsedCurrentActivity, setHintsUsedCurrentActivity] = useState(0)
 
   const currentActivity = activities[currentIndex] ?? null
   const activityType = currentActivity?.type ?? 'flashcard'
@@ -78,13 +89,33 @@ export function StudyViewerContainer({
     return () => clearInterval(interval)
   }, [sessionStartTime, studySetProp?.progress?.timeSpent])
 
-  const handleAnswer = useCallback((correct: boolean) => {
-    setProgress((p) => ({
-      ...p,
-      stars: (p.stars ?? 0) + (correct ? 1 : 0),
-      completed: Math.min((p.completed ?? 0) + 1, p.total),
-    }))
-  }, [])
+  useEffect(() => {
+    setActivityStartTime(Date.now())
+    setHintsUsedCurrentActivity(0)
+  }, [currentIndex])
+
+  const handleAnswer = useCallback(
+    async (correct: boolean) => {
+      setProgress((p) => ({
+        ...p,
+        stars: (p.stars ?? 0) + (correct ? 1 : 0),
+        completed: Math.min((p.completed ?? 0) + 1, p.total),
+      }))
+
+      if (sessionToken && currentActivity?.id && onAttemptSubmit) {
+        const timeSpentMs = Date.now() - activityStartTime
+        const score = correct ? 10 : 0
+        await onAttemptSubmit({
+          activityId: currentActivity.id,
+          score,
+          timeSpentMs,
+          hintsUsed: hintsUsedCurrentActivity,
+        })
+      }
+      setHintsUsedCurrentActivity(0)
+    },
+    [sessionToken, currentActivity?.id, activityType, onAttemptSubmit, activityStartTime, hintsUsedCurrentActivity]
+  )
 
   const handleParentToggle = useCallback(() => {
     setIsParentView((v) => !v)
@@ -180,7 +211,7 @@ export function StudyViewerContainer({
           {activityType === 'flashcard' && (
             <FlashcardsPanel
               cards={cards}
-              onAnswer={(_, correct) => handleAnswer(correct)}
+              onAnswer={(_, correct) => void handleAnswer(correct)}
               readAloudEnabled={readAloudEnabled}
               textSize={textSize}
               highContrast={highContrast}
@@ -189,7 +220,8 @@ export function StudyViewerContainer({
           {activityType === 'quiz' && (
             <QuizPanel
               questions={questions}
-              onSubmit={(_, correct) => handleAnswer(correct)}
+              onSubmit={(_, correct) => void handleAnswer(correct)}
+              onHintUse={() => setHintsUsedCurrentActivity((n) => n + 1)}
               readAloudEnabled={readAloudEnabled}
               textSize={textSize}
               highContrast={highContrast}
@@ -198,7 +230,7 @@ export function StudyViewerContainer({
           {activityType === 'lesson' && (
             <LessonPanel
               lessons={lessons}
-              onCompleteSection={() => handleAnswer(true)}
+              onCompleteSection={() => void handleAnswer(true)}
               readAloudEnabled={readAloudEnabled}
               textSize={textSize}
               highContrast={highContrast}
