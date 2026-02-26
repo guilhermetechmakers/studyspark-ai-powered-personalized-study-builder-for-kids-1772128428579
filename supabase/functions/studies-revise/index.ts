@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
     const studyId = (body?.studyId ?? '').toString()
     const prompt = (body?.prompt ?? body?.comments ?? body?.revisionPrompt ?? '').toString().trim()
     const blockId = body?.blockId ?? null
+    const blockContext = Array.isArray(body?.blockContext) ? body.blockContext : (blockId ? [blockId] : [])
+    const intent = (body?.intent ?? 'rephrase').toString()
 
     if (!studyId || !prompt) {
       return new Response(
@@ -79,18 +81,34 @@ Deno.serve(async (req) => {
 
     const currentPayload = (draftRow?.content_payload as Record<string, unknown>) ?? {}
     const lessons = Array.isArray(currentPayload.lessons) ? currentPayload.lessons : []
-    const block = blockId ? lessons.find((b: { id?: string }) => b?.id === blockId) : null
-    const contentToRevise = block?.content ?? JSON.stringify(currentPayload)
+    const blocks = Array.isArray((currentPayload as { blocks?: unknown[] }).blocks) ? (currentPayload as { blocks: unknown[] }).blocks : lessons
+    const targetIds = blockContext.length > 0 ? blockContext : (blockId ? [blockId] : [])
+    const targetBlocks = targetIds.length > 0
+      ? blocks.filter((b: { id?: string }) => b?.id && targetIds.includes(b.id))
+      : []
+    const contentToRevise = targetBlocks.length > 0
+      ? targetBlocks.map((b: { content?: string }) => b?.content ?? '').join('\n\n')
+      : (blocks[0] as { content?: string })?.content ?? JSON.stringify(currentPayload)
 
     const apiKey = Deno.env.get('OPENAI_API_KEY')
     let revisedContent = contentToRevise
+
+    const intentGuidance: Record<string, string> = {
+      clarify: 'Make the content clearer and easier to understand.',
+      expand: 'Add more detail and examples.',
+      shorten: 'Make it more concise.',
+      rephrase: 'Use different wording while keeping the meaning.',
+      upgrade_difficulty: 'Make it more challenging.',
+      adjust_tone: 'Adjust the tone (e.g. more playful or formal).',
+    }
+    const intentHint = intentGuidance[intent] ?? intentGuidance.rephrase
 
     if (apiKey) {
       const openai = new OpenAI({ apiKey })
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You revise educational content based on user feedback. Return only the revised content, no preamble.' },
+          { role: 'system', content: `You revise educational content based on user feedback. Intent: ${intentHint} Return only the revised content, no preamble.` },
           { role: 'user', content: `Original:\n${contentToRevise}\n\nRevision request: ${prompt}\n${body?.notes ? `Notes: ${body.notes}` : ''}` },
         ],
         stream: false,
@@ -101,13 +119,20 @@ Deno.serve(async (req) => {
     }
 
     let updatedPayload = { ...currentPayload }
-    if (blockId && block) {
-      const updatedLessons = lessons.map((b: { id?: string; content?: string }) =>
-        b?.id === blockId ? { ...b, content: revisedContent } : b
-      )
-      updatedPayload = { ...updatedPayload, lessons: updatedLessons }
+    if (targetBlocks.length > 0) {
+      const revisedParts = revisedContent.split('\n\n').filter(Boolean)
+      const updatedLessons = (blocks as { id?: string; content?: string; order?: number }[]).map((b) => {
+        const idx = targetBlocks.findIndex((t: { id?: string }) => t?.id === b?.id)
+        if (idx >= 0) {
+          const newContent = revisedParts[idx] ?? (targetBlocks.length === 1 ? revisedContent : '')
+          return { ...b, content: newContent }
+        }
+        return b
+      })
+      updatedPayload = { ...updatedPayload, lessons: updatedLessons, blocks: updatedLessons }
     } else {
-      updatedPayload = { ...updatedPayload, lessons: [{ id: 'revised-1', type: 'text', content: revisedContent, order: 0 }] }
+      const newBlock = { id: 'revised-1', type: 'text', content: revisedContent, order: 0 }
+      updatedPayload = { ...updatedPayload, lessons: [newBlock], blocks: [newBlock] }
     }
 
     const { data: updated, error: updateErr } = await supabase
@@ -128,6 +153,7 @@ Deno.serve(async (req) => {
       )
     }
 
+    const revisionId = `rev-${Date.now()}-${Math.random().toString(36).slice(2)}`
     return new Response(
       JSON.stringify({
         draft: updated
@@ -140,6 +166,9 @@ Deno.serve(async (req) => {
               updated_at: updated.updated_at,
             }
           : null,
+        revisionJobId: revisionId,
+        status: 'completed',
+        resultContent: revisedContent,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

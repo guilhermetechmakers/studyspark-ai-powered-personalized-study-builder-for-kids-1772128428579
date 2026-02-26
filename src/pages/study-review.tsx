@@ -1,11 +1,12 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -18,6 +19,15 @@ import {
   restoreVersion,
   duplicateStudy,
 } from '@/api/study-review'
+import {
+  fetchStudyReviewFromSupabase,
+  saveBlock,
+  saveDraftToSupabase,
+  saveDraftSupabaseAlias as saveDraftSupabase,
+  submitRevisionWithContext,
+  resolveConflict,
+  logConflict,
+} from '@/api/study-review-supabase'
 import type {
   Study,
   SectionBlock,
@@ -25,16 +35,29 @@ import type {
   AIInteractionEntry,
   Version,
   SourceReference,
+  AutosaveStatus,
+  UserRole,
 } from '@/types/study-review'
 import { dataGuard } from '@/lib/data-guard'
-import { StudySectionEditor } from '@/components/study-review/study-section-editor'
-import { RevisionPanel } from '@/components/study-review/revision-panel'
-import { VersionHistoryPanel } from '@/components/study-review/version-history-panel'
-import { SourceReferencesPanel } from '@/components/study-review/source-references-panel'
-import { ExportSharePanel } from '@/components/study-review/export-share-panel'
-import { QuickActionsBar } from '@/components/study-review/quick-actions-bar'
+import { useDebouncedCallback } from '@/hooks/use-debounce'
+import {
+  StudySectionEditor,
+  RevisionPanel,
+  RevisionRequestModal,
+  VersionHistoryPanel,
+  SourceReferencesPanel,
+  ExportSharePanel,
+  QuickActionsBar,
+  AutosaveIndicator,
+  ConflictIndicator,
+  PermissionsBadge,
+  PreviewPane,
+} from '@/components/study-review'
 import { SECTION_TYPE_LABELS } from '@/types/study-review'
 import { getMockStudyReview } from '@/data/study-review-mock'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? ''
+const useSupabase = !!SUPABASE_URL
 
 export function StudyReviewPage() {
   const { id } = useParams<{ id: string }>()
@@ -56,6 +79,12 @@ export function StudyReviewPage() {
   const [isSharing, setIsSharing] = useState(false)
   const [isSubmittingRevision, setIsSubmittingRevision] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
+  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>('idle')
+  const [hasConflict, setHasConflict] = useState(false)
+  const [revisionModalOpen, setRevisionModalOpen] = useState(false)
+  const [selectedRevisionBlockIds, setSelectedRevisionBlockIds] = useState<string[]>([])
+  const userRole: UserRole = 'parent'
+  const lastSavedRef = useRef<SectionBlock[]>([])
 
   const safeSections = dataGuard(studyData)
   const sortedSections = [...safeSections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -71,13 +100,31 @@ export function StudyReviewPage() {
   const loadStudy = useCallback(async () => {
     if (!studyId) return
     setIsLoading(true)
+    setHasConflict(false)
     try {
+      if (useSupabase) {
+        try {
+          const data = await fetchStudyReviewFromSupabase(studyId)
+          setStudy(data.study)
+          setStudyData(Array.isArray(data.sections) ? data.sections : [])
+          setSourceReferences(Array.isArray(data.references) ? data.references : [])
+          setVersionHistory(Array.isArray(data.versions) ? data.versions : [])
+          setAiInteractionHistory(Array.isArray(data.revisions) ? data.revisions.map((r: { id: string; blockId?: string; prompt: string; aiResponse: string | null; createdAt: string; status: string }) => ({ id: r.id, blockId: r.blockId ?? '', prompt: r.prompt, aiResponse: r.aiResponse, timestamp: r.createdAt, status: r.status as AIInteractionEntry['status'] })) : [])
+          lastSavedRef.current = Array.isArray(data.sections) ? data.sections : []
+          const first = (data.sections ?? [])[0]
+          setCurrentSectionId(first?.id ?? null)
+          return
+        } catch {
+          // Fall through to API/mock
+        }
+      }
       const data = await fetchStudyReview(studyId)
       setStudy(data.study)
       setStudyData(Array.isArray(data.sections) ? data.sections : [])
       setSourceReferences(Array.isArray(data.references) ? data.references : [])
       setVersionHistory(Array.isArray(data.versions) ? data.versions : [])
-      setAiInteractionHistory(Array.isArray(data.revisions) ? data.revisions.map((r) => ({ id: r.id, blockId: r.blockId, prompt: r.prompt, aiResponse: r.aiResponse, timestamp: r.createdAt, status: r.status })) : [])
+      setAiInteractionHistory(Array.isArray(data.revisions) ? data.revisions.map((r: { id: string; blockId?: string; prompt: string; aiResponse: string | null; createdAt: string; status: string }) => ({ id: r.id, blockId: r.blockId ?? '', prompt: r.prompt, aiResponse: r.aiResponse, timestamp: r.createdAt, status: r.status as AIInteractionEntry['status'] })) : [])
+      lastSavedRef.current = Array.isArray(data.sections) ? data.sections : []
       const first = (data.sections ?? [])[0]
       setCurrentSectionId(first?.id ?? null)
     } catch {
@@ -87,6 +134,7 @@ export function StudyReviewPage() {
       setSourceReferences(mock.references ?? [])
       setVersionHistory(mock.versions ?? [])
       setAiInteractionHistory([])
+      lastSavedRef.current = mock.sections ?? []
       const first = (mock.sections ?? [])[0]
       setCurrentSectionId(first?.id ?? null)
       toast.info('Using demo data. Connect API for real data.')
@@ -99,6 +147,46 @@ export function StudyReviewPage() {
     loadStudy()
   }, [loadStudy])
 
+  const performSave = useCallback(async () => {
+    if (!studyId) return
+    setAutosaveStatus('saving')
+    try {
+      if (useSupabase) {
+        const { ok, versionMismatch } = await saveDraftToSupabase(studyId, studyData)
+        if (versionMismatch) {
+          setHasConflict(true)
+          setAutosaveStatus('error')
+          await logConflict(studyId, { reason: 'version_mismatch' } as Record<string, unknown>)
+          return
+        }
+        if (ok) {
+          lastSavedRef.current = [...studyData]
+          setAutosaveStatus('saved')
+          setTimeout(() => setAutosaveStatus('idle'), 2000)
+        } else {
+          setAutosaveStatus('error')
+        }
+      } else {
+        await saveDraft(studyId, { blocks: studyData })
+        lastSavedRef.current = [...studyData]
+        setAutosaveStatus('saved')
+        setTimeout(() => setAutosaveStatus('idle'), 2000)
+        toast.success('Draft saved')
+      }
+    } catch {
+      setAutosaveStatus('error')
+      if (!useSupabase) toast.error('Failed to save draft')
+    }
+  }, [studyId, studyData])
+
+  const debouncedSave = useDebouncedCallback(performSave, 20000)
+
+  useEffect(() => {
+    if (studyData.length > 0 && JSON.stringify(studyData) !== JSON.stringify(lastSavedRef.current)) {
+      debouncedSave()
+    }
+  }, [studyData, debouncedSave])
+
   const handleUpdateSection = useCallback((sectionId: string, content: string | SectionContent | Record<string, unknown>) => {
     setStudyData((prev) => {
       const list = prev ?? []
@@ -110,12 +198,57 @@ export function StudyReviewPage() {
     })
   }, [])
 
+  const handleBlockBlur = useCallback(
+    async (sectionId: string, content: string | SectionContent | Record<string, unknown>) => {
+      if (!studyId || !useSupabase) return
+      setAutosaveStatus('saving')
+      try {
+        const { ok, versionMismatch } = await saveBlock(
+          studyId,
+          sectionId,
+          typeof content === 'string' ? content : (content as Record<string, unknown>)
+        )
+        if (versionMismatch) {
+          setHasConflict(true)
+          setAutosaveStatus('error')
+          return
+        }
+        if (ok) {
+          setStudyData((prev) => {
+            const list = prev ?? []
+            const idx = list.findIndex((s) => s.id === sectionId)
+            if (idx < 0) return list
+            const next = [...list]
+            next[idx] = { ...next[idx]!, content }
+            lastSavedRef.current = next
+            return next
+          })
+          setAutosaveStatus('saved')
+          setTimeout(() => setAutosaveStatus('idle'), 2000)
+        }
+      } catch {
+        setAutosaveStatus('error')
+      }
+    },
+    [studyId]
+  )
+
   const handleSaveDraft = useCallback(async () => {
     if (!studyId) return
     setIsSaving(true)
     try {
-      await saveDraft(studyId, { blocks: studyData })
-      toast.success('Draft saved')
+      if (useSupabase) {
+        const { ok } = await saveDraftSupabase(studyId, studyData)
+        if (ok) {
+          lastSavedRef.current = [...studyData]
+          toast.success('Draft saved')
+        } else {
+          toast.error('Failed to save draft')
+        }
+      } else {
+        await saveDraft(studyId, { blocks: studyData })
+        toast.success('Draft saved')
+      }
     } catch {
       toast.error('Failed to save draft')
     } finally {
@@ -217,6 +350,56 @@ export function StudyReviewPage() {
     }
   }, [studyId])
 
+  const handleSubmitRevisionWithContext = useCallback(
+    async (payload: { blockIds: string[]; prompt: string; intent?: string; notes?: string }) => {
+      if (!studyId) return
+      setIsSubmittingRevision(true)
+      try {
+        if (useSupabase) {
+          const rev = await submitRevisionWithContext(studyId, payload)
+          setAiInteractionHistory((prev) => [
+            ...(prev ?? []),
+            {
+              id: rev.id,
+              blockId: payload.blockIds[0] ?? '',
+              prompt: payload.prompt,
+              aiResponse: rev.resultContent ? JSON.stringify(rev.resultContent) : null,
+              timestamp: rev.createdAt,
+              status: rev.status,
+            },
+          ])
+          if (rev.resultContent && typeof rev.resultContent === 'object') {
+            await loadStudy()
+          }
+          toast.success('Revision submitted')
+        } else {
+          await handleSubmitRevision(
+            payload.blockIds[0] ?? currentSection?.id ?? '',
+            payload.prompt,
+            payload.notes
+          )
+        }
+      } catch {
+        toast.error('Revision failed')
+      } finally {
+        setIsSubmittingRevision(false)
+      }
+    },
+    [studyId, useSupabase, currentSection?.id, handleSubmitRevision]
+  )
+
+  const handleConflictResolve = useCallback(
+    async (strategy: 'keep_local' | 'keep_server' | 'merge') => {
+      if (!studyId) return
+      await resolveConflict(studyId, '', strategy)
+      setHasConflict(false)
+      if (strategy === 'keep_server') {
+        await loadStudy()
+      }
+    },
+    [studyId, loadStudy]
+  )
+
   const handleRestoreVersion = useCallback(async (versionId: string) => {
     if (!studyId) return
     setIsRestoring(true)
@@ -283,12 +466,27 @@ export function StudyReviewPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          {useSupabase && (
+            <AutosaveIndicator status={autosaveStatus} className="shrink-0" />
+          )}
+          <PermissionsBadge role={userRole} className="hidden sm:inline-flex" />
           <div className="hidden w-48 sm:block">
             <p className="text-xs font-medium text-muted-foreground">Progress</p>
             <Progress value={completionPercent} className="h-2" />
           </div>
         </div>
       </header>
+
+      {hasConflict && (
+        <div className="shrink-0 px-6 py-3">
+          <ConflictIndicator
+            hasConflict={hasConflict}
+            conflictId=""
+            studyId={studyId}
+            onResolve={handleConflictResolve}
+          />
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         <aside
@@ -346,6 +544,7 @@ export function StudyReviewPage() {
                   sectionId={currentSection.id}
                   sectionData={currentSection}
                   onUpdateSection={handleUpdateSection}
+                  onBlur={useSupabase ? handleBlockBlur : undefined}
                   className="animate-fade-in"
                 />
               ) : (
@@ -358,28 +557,69 @@ export function StudyReviewPage() {
             </div>
           </div>
 
-          <aside className="hidden w-80 shrink-0 flex-col gap-4 overflow-auto border-l border-border bg-background p-4 lg:flex">
-            <RevisionPanel
-              selectedBlock={currentSection}
-              draftText={draftTextPreview}
-              onSubmitRevision={handleSubmitRevision}
-              revisionsHistory={aiInteractionHistory}
-              isSubmitting={isSubmittingRevision}
-            />
-            <VersionHistoryPanel
-              versions={versionHistory}
-              onRestoreVersion={handleRestoreVersion}
-              isRestoring={isRestoring}
-            />
-            <SourceReferencesPanel references={sourceReferences} />
-            <ExportSharePanel
-              studyData={studyData}
-              onExport={handleExport}
-              onShare={handleShare}
-              isExporting={isExporting}
-              isSharing={isSharing}
-            />
+          <aside className="hidden w-80 shrink-0 flex-col overflow-auto border-l border-border bg-background lg:flex">
+            <Tabs defaultValue="revision" className="flex h-full flex-col">
+              <TabsList className="mx-4 mt-4 grid w-[calc(100%-2rem)] grid-cols-3 rounded-xl">
+                <TabsTrigger value="revision" className="rounded-lg">
+                  Revise
+                </TabsTrigger>
+                <TabsTrigger value="versions" className="rounded-lg">
+                  History
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="rounded-lg">
+                  Preview
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="revision" className="mt-4 flex-1 overflow-auto px-4 pb-4">
+                <div className="space-y-4">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full rounded-full"
+                    onClick={() => setRevisionModalOpen(true)}
+                    aria-label="Open revision request modal"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Request AI Revision
+                  </Button>
+                  <RevisionPanel
+                    selectedBlock={currentSection}
+                    draftText={draftTextPreview}
+                    onSubmitRevision={handleSubmitRevision}
+                    revisionsHistory={aiInteractionHistory}
+                    isSubmitting={isSubmittingRevision}
+                  />
+                  <SourceReferencesPanel references={sourceReferences} />
+                  <ExportSharePanel
+                    studyData={studyData}
+                    onExport={handleExport}
+                    onShare={handleShare}
+                    isExporting={isExporting}
+                    isSharing={isSharing}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="versions" className="mt-4 flex-1 overflow-auto px-4 pb-4">
+                <VersionHistoryPanel
+                  versions={versionHistory}
+                  onRestoreVersion={handleRestoreVersion}
+                  isRestoring={isRestoring}
+                />
+              </TabsContent>
+              <TabsContent value="preview" className="mt-4 flex-1 overflow-auto px-4 pb-4">
+                <PreviewPane sections={studyData} />
+              </TabsContent>
+            </Tabs>
           </aside>
+          <RevisionRequestModal
+            open={revisionModalOpen}
+            onOpenChange={setRevisionModalOpen}
+            blocks={studyData}
+            selectedBlockIds={selectedRevisionBlockIds}
+            onSelectedBlockIdsChange={setSelectedRevisionBlockIds}
+            onSubmit={(p) => { void handleSubmitRevisionWithContext({ blockIds: p.blockIds, prompt: p.prompt, intent: p.intent, notes: p.notes }) }}
+            isSubmitting={isSubmittingRevision}
+          />
         </main>
       </div>
 

@@ -1,9 +1,9 @@
 /**
- * Supabase Edge Function: studies-approve
- * Marks study as ready for export.
- * POST /functions/v1/studies-approve
+ * Supabase Edge Function: studies-duplicate
+ * Duplicates a study with its draft content.
+ * POST /functions/v1/studies-duplicate
  * Body: { studyId }
- * Returns: { study }
+ * Returns: { id: newStudyId }
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -45,7 +45,6 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const studyId = (body?.studyId ?? '').toString()
-    const notes = (body?.notes ?? '').toString().trim()
 
     if (!studyId) {
       return new Response(
@@ -54,39 +53,65 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { data: study, error: updateErr } = await supabase
+    const { data: study, error: studyErr } = await supabase
       .from('studies')
-      .update({ status: 'ready', updated_at: new Date().toISOString() })
+      .select('*')
       .eq('id', studyId)
       .eq('user_id', user.id)
-      .select()
       .single()
 
-    if (updateErr || !study) {
+    if (studyErr || !study) {
       return new Response(
-        JSON.stringify({ message: 'Study not found or update failed' }),
+        JSON.stringify({ message: 'Study not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    await supabase.from('approvals').insert({
-      study_id: studyId,
-      approved_by_user_id: user.id,
-      status: 'approved',
-      notes: notes || null,
-    }).catch(() => {})
+    const { data: draft } = await supabase
+      .from('drafts')
+      .select('content_payload, version')
+      .eq('study_id', studyId)
+      .single()
+
+    const newStudy = {
+      user_id: user.id,
+      topic: (study.topic as string) ?? 'Untitled',
+      topic_tags: study.topic_tags ?? [],
+      learning_style: study.learning_style ?? 'playful',
+      age: study.age ?? 8,
+      folders_path: study.folders_path ?? [],
+      status: 'draft',
+      subject: study.subject ?? '',
+      context_notes: study.context_notes ?? null,
+      exam_date: study.exam_date ?? null,
+      child_profile_id: study.child_profile_id ?? null,
+      generation_options: study.generation_options ?? {},
+    }
+
+    const { data: insertedStudy, error: insertErr } = await supabase
+      .from('studies')
+      .insert(newStudy)
+      .select('id')
+      .single()
+
+    if (insertErr || !insertedStudy) {
+      return new Response(
+        JSON.stringify({ message: insertErr?.message ?? 'Failed to create study' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const newStudyId = insertedStudy.id as string
+    const contentPayload = (draft?.content_payload as Record<string, unknown>) ?? {}
+
+    await supabase.from('drafts').insert({
+      study_id: newStudyId,
+      version: (draft?.version as number) ?? 1,
+      content_payload: contentPayload,
+    })
 
     return new Response(
-      JSON.stringify({
-        study: {
-          id: study.id,
-          user_id: study.user_id,
-          topic: study.topic,
-          status: study.status,
-          created_at: study.created_at,
-          updated_at: study.updated_at,
-        },
-      }),
+      JSON.stringify({ id: newStudyId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (err) {

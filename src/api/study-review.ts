@@ -1,6 +1,6 @@
 /**
  * Study Review API - Fetch, save, revise, export, share.
- * Uses native fetch via src/lib/api.ts
+ * Uses apiGet/apiPost when VITE_API_URL is set; falls back to Supabase when available.
  */
 
 import {
@@ -16,6 +16,18 @@ import type {
   StudyReviewData,
 } from '@/types/study-review'
 import { normalizeApiResponse } from '@/lib/data-guard'
+import {
+  fetchStudyReviewSupabase,
+  saveDraftSupabase,
+  submitRevisionSupabase,
+  approveStudySupabase,
+  duplicateStudySupabase,
+  fetchVersionHistorySupabase,
+  restoreVersionSupabase,
+} from '@/api/study-review-supabase'
+
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
+const USE_SUPABASE = !API_BASE && import.meta.env.VITE_SUPABASE_URL
 
 export interface StudyReviewResponse {
   study?: Study
@@ -26,26 +38,36 @@ export interface StudyReviewResponse {
 }
 
 export async function fetchStudyReview(studyId: string): Promise<StudyReviewData> {
-  const res = await apiGet<StudyReviewResponse>(`/api/studies/${studyId}/review`)
-  const study = res?.study ?? null
-  const sections = Array.isArray(res?.sections) ? res.sections : []
-  const references = Array.isArray(res?.references) ? res.references : []
-  const versions = Array.isArray(res?.versions) ? res.versions : []
-  const revisions = Array.isArray(res?.revisions) ? res.revisions : []
+  if (USE_SUPABASE) {
+    return fetchStudyReviewSupabase(studyId)
+  }
+  try {
+    const res = await apiGet<StudyReviewResponse>(`/api/studies/${studyId}/review`)
+    const study = res?.study ?? null
+    const sections = Array.isArray(res?.sections) ? res.sections : []
+    const references = Array.isArray(res?.references) ? res.references : []
+    const versions = Array.isArray(res?.versions) ? res.versions : []
+    const revisions = Array.isArray(res?.revisions) ? res.revisions : []
 
-  return {
-    study: study ?? {
-      id: studyId,
-      title: 'Untitled Study',
-      ownerId: '',
-      status: 'draft',
-      createdAt: '',
-      updatedAt: '',
-    },
-    sections,
-    references,
-    versions,
-    revisions,
+    return {
+      study: study ?? {
+        id: studyId,
+        title: 'Untitled Study',
+        ownerId: '',
+        status: 'draft',
+        createdAt: '',
+        updatedAt: '',
+      },
+      sections,
+      references,
+      versions,
+      revisions,
+    }
+  } catch {
+    if (import.meta.env.VITE_SUPABASE_URL) {
+      return fetchStudyReviewSupabase(studyId)
+    }
+    throw new Error('Failed to fetch study')
   }
 }
 
@@ -55,13 +77,18 @@ export interface SaveDraftPayload {
 }
 
 export async function saveDraft(studyId: string, payload: SaveDraftPayload): Promise<{ ok: boolean }> {
+  if (USE_SUPABASE) {
+    return saveDraftSupabase(studyId, Array.isArray(payload.blocks) ? payload.blocks : [])
+  }
   await apiPost(`/api/studies/${studyId}/drafts`, payload)
   return { ok: true }
 }
 
 export interface SubmitRevisionPayload {
-  blockId: string
+  blockId?: string
+  blockIds?: string[]
   prompt: string
+  intent?: import('@/types/study-review').RevisionIntent
   notes?: string
 }
 
@@ -69,12 +96,24 @@ export async function submitRevision(
   studyId: string,
   payload: SubmitRevisionPayload
 ): Promise<Revision> {
+  if (USE_SUPABASE) {
+    return submitRevisionSupabase(studyId, {
+      blockId: payload.blockId,
+      blockIds: payload.blockIds,
+      prompt: payload.prompt,
+      intent: payload.intent,
+      notes: payload.notes,
+    })
+  }
   const res = await apiPost<Revision>(`/api/studies/${studyId}/revisions`, payload)
   return res ?? { id: '', studyId, blockId: payload.blockId, prompt: payload.prompt, aiResponse: null, createdAt: new Date().toISOString(), status: 'pending' }
 }
 
-export async function approveStudy(studyId: string): Promise<{ ok: boolean }> {
-  await apiPost(`/api/studies/${studyId}/approve`, {})
+export async function approveStudy(studyId: string, notes?: string): Promise<{ ok: boolean }> {
+  if (USE_SUPABASE) {
+    return approveStudySupabase(studyId, notes)
+  }
+  await apiPost(`/api/studies/${studyId}/approve`, { notes })
   return { ok: true }
 }
 
@@ -108,6 +147,9 @@ export async function shareStudy(
 }
 
 export async function fetchVersionHistory(studyId: string): Promise<Version[]> {
+  if (USE_SUPABASE) {
+    return fetchVersionHistorySupabase(studyId)
+  }
   const res = await apiGet<{ data?: Version[] } | Version[]>(
     `/api/studies/${studyId}/versions`
   )
@@ -119,11 +161,17 @@ export async function restoreVersion(
   studyId: string,
   versionId: string
 ): Promise<{ ok: boolean }> {
+  if (USE_SUPABASE) {
+    return restoreVersionSupabase(studyId, versionId)
+  }
   await apiPost(`/api/studies/${studyId}/versions/${versionId}/restore`, {})
   return { ok: true }
 }
 
 export async function duplicateStudy(studyId: string): Promise<Study> {
+  if (USE_SUPABASE) {
+    return duplicateStudySupabase(studyId)
+  }
   const res = await apiPost<Study>(`/api/studies/${studyId}/duplicate`, {})
   return res ?? { id: '', title: '', ownerId: '', status: 'draft', createdAt: '', updatedAt: '' }
 }

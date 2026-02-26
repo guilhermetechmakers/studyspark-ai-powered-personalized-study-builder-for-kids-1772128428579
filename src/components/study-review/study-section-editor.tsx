@@ -12,6 +12,7 @@ export interface StudySectionEditorProps {
   sectionId: string
   sectionData: SectionBlock | null | undefined
   onUpdateSection: (sectionId: string, content: string | SectionContent | Record<string, unknown>) => void
+  onBlur?: (sectionId: string, content: string | SectionContent | Record<string, unknown>) => void
   className?: string
 }
 
@@ -39,6 +40,7 @@ export function StudySectionEditor({
   sectionId,
   sectionData,
   onUpdateSection,
+  onBlur,
   className,
 }: StudySectionEditorProps) {
   const content = sectionData?.content ?? ''
@@ -57,14 +59,22 @@ export function StudySectionEditor({
   const handleSaveText = useCallback(() => {
     if (!sectionId) return
     onUpdateSection(sectionId, editValue)
+    onBlur?.(sectionId, editValue)
     setIsEditing(false)
-  }, [sectionId, editValue, onUpdateSection])
+  }, [sectionId, editValue, onUpdateSection, onBlur])
+
+  const handleBlurText = useCallback(() => {
+    if (!sectionId || editValue === getContentAsString(content)) return
+    onUpdateSection(sectionId, editValue)
+    onBlur?.(sectionId, editValue)
+  }, [sectionId, editValue, content, onUpdateSection, onBlur])
 
   const handleSaveObject = useCallback(() => {
     if (!sectionId) return
     onUpdateSection(sectionId, editObject)
+    onBlur?.(sectionId, editObject)
     setIsEditing(false)
-  }, [sectionId, editObject, onUpdateSection])
+  }, [sectionId, editObject, onUpdateSection, onBlur])
 
   const handleCancel = useCallback(() => {
     setEditValue(getContentAsString(content))
@@ -288,6 +298,7 @@ export function StudySectionEditor({
               <Textarea
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
+                onBlur={handleBlurText}
                 rows={8}
                 className="rounded-xl"
                 aria-label="Edit summary"

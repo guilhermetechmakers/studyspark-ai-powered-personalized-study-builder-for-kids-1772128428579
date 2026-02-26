@@ -1,9 +1,9 @@
 /**
- * Supabase Edge Function: studies-approve
- * Marks study as ready for export.
- * POST /functions/v1/studies-approve
- * Body: { studyId }
- * Returns: { study }
+ * Supabase Edge Function: studies-resolve-conflict
+ * Resolves concurrent edit conflicts.
+ * POST /functions/v1/studies-resolve-conflict
+ * Body: { studyId, conflictId, resolutionStrategy: 'keep_local'|'keep_remote'|'merge' }
+ * Returns: { ok: boolean }
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -45,48 +45,55 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const studyId = (body?.studyId ?? '').toString()
-    const notes = (body?.notes ?? '').toString().trim()
+    const conflictId = (body?.conflictId ?? '').toString()
+    const resolutionStrategy = (body?.resolutionStrategy ?? 'keep_local').toString()
 
-    if (!studyId) {
+    if (!studyId || !conflictId) {
       return new Response(
-        JSON.stringify({ message: 'studyId required' }),
+        JSON.stringify({ message: 'studyId and conflictId required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const { data: study, error: updateErr } = await supabase
+    const { data: study } = await supabase
       .from('studies')
-      .update({ status: 'ready', updated_at: new Date().toISOString() })
+      .select('id')
       .eq('id', studyId)
       .eq('user_id', user.id)
-      .select()
       .single()
 
-    if (updateErr || !study) {
+    if (!study) {
       return new Response(
-        JSON.stringify({ message: 'Study not found or update failed' }),
+        JSON.stringify({ message: 'Study not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    await supabase.from('approvals').insert({
-      study_id: studyId,
-      approved_by_user_id: user.id,
-      status: 'approved',
-      notes: notes || null,
-    }).catch(() => {})
+    const { data: conflict } = await supabase
+      .from('conflict_logs')
+      .select('*')
+      .eq('study_id', studyId)
+      .eq('id', conflictId)
+      .single()
+
+    if (!conflict) {
+      return new Response(
+        JSON.stringify({ message: 'Conflict not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    await supabase
+      .from('conflict_logs')
+      .update({
+        resolved_at: new Date().toISOString(),
+        resolution_strategy: resolutionStrategy,
+      })
+      .eq('id', conflictId)
+      .eq('study_id', studyId)
 
     return new Response(
-      JSON.stringify({
-        study: {
-          id: study.id,
-          user_id: study.user_id,
-          topic: study.topic,
-          status: study.status,
-          created_at: study.created_at,
-          updated_at: study.updated_at,
-        },
-      }),
+      JSON.stringify({ ok: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (err) {
