@@ -35,6 +35,14 @@
     --coral: 255 176 133;
     --text-heading: 35 35 35;
     --text-body: 108 108 108;
+
+    /* Status UI tokens (toast variants) */
+    --success: 134 239 172;
+    --success-foreground: 22 101 52;
+    --warning: 255 245 165;
+    --warning-foreground: 113 63 18;
+    --info: 169 166 249;
+    --info-foreground: 35 35 35;
   }
 
   .dark {
@@ -55,6 +63,12 @@
     --border: 55 55 65;
     --input: 55 55 65;
     --ring: 169 166 249;
+    --success: 34 197 94;
+    --success-foreground: 240 253 244;
+    --warning: 234 179 8;
+    --warning-foreground: 254 252 232;
+    --info: 129 140 248;
+    --info-foreground: 248 250 252;
   }
 
   * {
