@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { requestPasswordReset } from '@/api/auth'
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -25,11 +26,10 @@ export function ForgotPasswordPage() {
     defaultValues: { email: '' },
   })
 
-  const onSubmit = async (_data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     setIsLoading(true)
     try {
-      // TODO: Supabase password reset
-      await new Promise((r) => setTimeout(r, 800))
+      await requestPasswordReset(data.email)
       toast.success('Check your email for a reset link')
       setSubmitted(true)
     } catch {
