@@ -1,0 +1,8 @@
+export { DashboardShell } from './dashboard-shell'
+export { TopNav } from './top-nav'
+export { ProgressOverviewGrid } from './progress-overview-grid'
+export { RecentStudiesList } from './recent-studies-list'
+export { QuickCreateCard } from './quick-create-card'
+export { RecommendedStudiesCarousel } from './recommended-studies-carousel'
+export { HelpWidget } from './help-widget'
+export { DashboardFooter } from './dashboard-footer'
