@@ -18,26 +18,22 @@ function loadPersistedCategories(): CookieCategory[] {
 
     if (!Array.isArray(categories)) return DEFAULT_CATEGORIES
 
-    const validated: CookieCategory[] = (categories ?? []).map((item) => {
-      if (!item || typeof item !== 'object') return null
+    const validated: CookieCategory[] = []
+    for (const item of categories ?? []) {
+      if (!item || typeof item !== 'object') continue
       const c = item as Record<string, unknown>
       const id = typeof c.id === 'string' ? c.id : ''
-      const label = typeof c.label === 'string' ? c.label : ''
-      const description = typeof c.description === 'string' ? c.description : ''
-      const required = c.required === true
-      const enabled = typeof c.enabled === 'boolean' ? c.enabled : false
-
       const defaultCat = DEFAULT_CATEGORIES.find((d) => d.id === id)
-      if (!defaultCat) return null
-
-      return {
-        id: defaultCat.id,
-        label: defaultCat.label,
-        description: defaultCat.description,
-        required: defaultCat.required,
-        enabled: required ? true : enabled,
-      }
-    }).filter((c): c is CookieCategory => c !== null)
+      if (!defaultCat) continue
+      validated.push({
+        ...defaultCat,
+        enabled: defaultCat.required
+          ? true
+          : typeof c.enabled === 'boolean'
+            ? c.enabled
+            : defaultCat.enabled,
+      })
+    }
 
     if (validated.length === 0) return DEFAULT_CATEGORIES
 
@@ -96,7 +92,9 @@ export function useCookieConsentState() {
 
   const updateCategory = useCallback((id: string, enabled: boolean) => {
     setCategoriesSafe((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, enabled } : c))
+      prev.map((c) =>
+        c.id === id && c.required !== true ? { ...c, enabled } : c
+      )
     )
   }, [setCategoriesSafe])
 

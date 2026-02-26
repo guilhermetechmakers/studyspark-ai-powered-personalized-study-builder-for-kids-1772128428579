@@ -15,7 +15,6 @@ import { CheckoutPage } from '@/pages/checkout'
 import { NotFoundPage } from '@/pages/not-found'
 import { ErrorPage } from '@/pages/error'
 import { AboutHelpPage } from '@/pages/about-help'
-import { LegalPage } from '@/pages/legal'
 import { PrivacyPolicyPage } from '@/pages/privacy-policy'
 import { CookiePolicyPage } from '@/pages/cookie-policy'
 import { TermsOfServicePage } from '@/pages/terms-of-service'
@@ -28,16 +27,6 @@ import { AdminModerationPage } from '@/pages/admin-moderation'
 import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
-
-const cookiesContent = `
-<p>We use cookies and similar technologies to provide and improve our service.</p>
-<h3>Essential Cookies</h3>
-<p>Required for authentication and core functionality.</p>
-<h3>Analytics</h3>
-<p>We use analytics to understand usage and improve the product.</p>
-<h3>Your Choices</h3>
-<p>You can manage cookie preferences in your browser settings.</p>
-`
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
@@ -54,7 +43,7 @@ export const router = createBrowserRouter([
   { path: '/terms', element: <TermsOfServicePage /> },
   { path: '/terms-of-service', element: <TermsOfServicePage /> },
   { path: '/onboarding/accept-terms', element: <OnboardingAcceptTermsPage /> },
-  { path: '/cookies', element: <LegalPage title="Cookie Policy" content={cookiesContent} /> },
+  { path: '/cookies', element: <CookiePolicyPage /> },
   { path: '/cookie-policy', element: <CookiePolicyPage /> },
   {
     path: '/dashboard',

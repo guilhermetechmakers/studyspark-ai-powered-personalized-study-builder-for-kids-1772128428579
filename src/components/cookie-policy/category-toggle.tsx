@@ -34,7 +34,7 @@ export function CategoryToggle({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-2xl border border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/30 via-white to-[rgb(var(--lavender))]/15 p-5 md:p-6 transition-all duration-300 hover:shadow-card',
+        'flex flex-col gap-3 rounded-2xl border border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/30 via-white to-[rgb(var(--lavender))]/15 p-5 md:p-6 shadow-card transition-all duration-300 hover:shadow-card-hover',
         disabled && 'opacity-90',
         className
       )}

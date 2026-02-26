@@ -22,7 +22,7 @@ export function ConsentActions({
   return (
     <div
       className={cn(
-        'flex flex-col gap-4 rounded-2xl border border-border/60 bg-gradient-to-br from-[rgb(var(--lavender))]/20 via-white to-[rgb(var(--peach-light))]/30 p-6 md:p-8',
+        'flex flex-col gap-4 rounded-2xl border border-border/60 bg-gradient-to-br from-[rgb(var(--lavender))]/20 via-white to-[rgb(var(--peach-light))]/30 p-6 md:p-8 transition-shadow duration-300 hover:shadow-card-hover',
         className
       )}
       role="group"

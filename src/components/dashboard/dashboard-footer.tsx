@@ -6,6 +6,7 @@ const footerLinks = [
   { label: 'About', href: '/about' },
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms', href: '/terms-of-service' },
+  { label: 'Cookies', href: '/cookie-policy' },
 ]
 
 export function DashboardFooter() {

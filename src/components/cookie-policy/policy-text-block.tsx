@@ -20,7 +20,7 @@ export function PolicyTextBlock({
     <section
       id={id}
       className={cn(
-        'rounded-[20px] border border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/40 via-white to-[rgb(var(--lavender))]/20 p-6 md:p-8 shadow-card transition-all duration-300',
+        'rounded-[20px] border border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/40 via-white to-[rgb(var(--lavender))]/20 p-6 md:p-8 shadow-card transition-all duration-300 hover:shadow-card-hover',
         className
       )}
       aria-labelledby={id ? `${id}-heading` : undefined}
