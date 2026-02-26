@@ -60,9 +60,11 @@ export async function signup(name: string, email: string, password: string): Pro
     if (error) throw new Error(error.message)
     const user = data?.user
     if (!user) throw new Error('Signup failed')
+    const needsEmailVerification = !data?.session
     return {
       user: toUser(user),
-      onboardingRequired: true,
+      onboardingRequired: !needsEmailVerification,
+      needsEmailVerification,
     }
   }
   // Mock for development
@@ -99,6 +101,50 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
   }
   await new Promise((r) => setTimeout(r, 600))
   return { success: true }
+}
+
+export type VerificationStatus = 'pending' | 'verified' | 'error'
+
+export interface VerificationStatusResponse {
+  status: VerificationStatus
+  email?: string
+  message?: string
+}
+
+export interface ResendVerificationResponse {
+  success: boolean
+  message?: string
+  cooldown?: number
+}
+
+export async function postResendVerification(email: string): Promise<ResendVerificationResponse> {
+  if (hasSupabase) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+    })
+    if (error) throw new Error(error.message)
+    return { success: true, message: 'Verification email sent' }
+  }
+  await new Promise((r) => setTimeout(r, 500))
+  return { success: true, message: 'Verification email sent' }
+}
+
+export async function getVerificationStatus(): Promise<VerificationStatusResponse> {
+  if (hasSupabase) {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error) {
+      return { status: 'error', message: error.message }
+    }
+    const email = user?.email ?? ''
+    const isVerified = Boolean(user?.email_confirmed_at)
+    return {
+      status: isVerified ? 'verified' : 'pending',
+      email,
+    }
+  }
+  await new Promise((r) => setTimeout(r, 300))
+  return { status: 'pending', email: '' }
 }
 
 type ChildProfileRow = {

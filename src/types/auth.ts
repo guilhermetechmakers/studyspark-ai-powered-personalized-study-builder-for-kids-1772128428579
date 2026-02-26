@@ -40,6 +40,7 @@ export interface AuthResponse {
   user: User
   token?: string
   onboardingRequired?: boolean
+  needsEmailVerification?: boolean
 }
 
 export interface OnboardingChildrenResponse {

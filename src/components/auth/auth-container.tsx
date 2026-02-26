@@ -48,6 +48,12 @@ export function AuthContainer() {
     try {
       const res = await signup(data.name, data.email, data.password)
       setUserId(res?.user?.id ?? '')
+      const needsEmailVerification = res?.needsEmailVerification === true
+      if (needsEmailVerification) {
+        toast.success('Check your email to verify your account')
+        navigate('/verify-email', { state: { email: data.email } })
+        return
+      }
       if (res?.onboardingRequired) {
         setOnboardingOpen(true)
       } else {
