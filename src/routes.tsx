@@ -32,6 +32,8 @@ import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
 import { SearchRedirectPage } from '@/pages/search-redirect'
+import { ExportPage } from '@/pages/export-page'
+import { ExportProgressPage } from '@/pages/export-progress-page'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 
 export const router = createBrowserRouter([
@@ -69,6 +71,9 @@ export const router = createBrowserRouter([
       { path: 'studies/:id/detail', element: <StudyDetailPage /> },
       { path: 'create', element: <CreateStudyWizard /> },
       { path: 'upload-materials', element: <UploadMaterialsPage /> },
+      { path: 'export', element: <ExportPage /> },
+      { path: 'export-progress', element: <ExportProgressPage /> },
+      { path: 'exports', element: <ExportProgressPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'checkout', element: <CheckoutPage /> },
       { path: 'analytics', element: <AnalyticsDashboardPage /> },

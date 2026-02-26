@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Plus, Grid3X3, List, FolderOpen, History } from 'lucide-react'
+import { Plus, Grid3X3, List, FolderOpen, History, FileDown, FileArchive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -397,6 +397,18 @@ export function StudyLibraryPage() {
               </p>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/dashboard/export" aria-label="Export and print">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export & Print
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/dashboard/export-progress" aria-label="Export history">
+                  <FileArchive className="mr-2 h-4 w-4" />
+                  Export History
+                </Link>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

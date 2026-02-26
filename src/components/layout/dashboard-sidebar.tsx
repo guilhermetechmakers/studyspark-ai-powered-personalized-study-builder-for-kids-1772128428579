@@ -15,6 +15,8 @@ import {
   User,
   Users,
   BarChart3,
+  FileDown,
+  History,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -26,8 +28,9 @@ const navItems = [
   { to: '/dashboard/profile', label: 'Profile', icon: User },
   { to: '/dashboard/children', label: 'Children', icon: Users },
   { to: '/dashboard/studies', label: 'Study Library', icon: FolderOpen },
+  { to: '/dashboard/export', label: 'Export & Print', icon: FileDown },
+  { to: '/dashboard/export-progress', label: 'Export History', icon: History },
   { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/dashboard/analytics', label: 'Progress & Analytics', icon: BarChart3 },
   { to: '/dashboard/create', label: 'Create Study', icon: PlusCircle },
   { to: '/dashboard/upload-materials', label: 'Upload Materials', icon: Upload },
   { to: '/dashboard/checkout', label: 'Checkout', icon: ShoppingCart },

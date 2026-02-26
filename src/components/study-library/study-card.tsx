@@ -272,10 +272,18 @@ export function StudyCard({
                       Duplicate
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to={`/dashboard/export?studyId=${encodeURIComponent(study.id)}&title=${encodeURIComponent(study.title ?? '')}`}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Export & Print
+                    </Link>
+                  </DropdownMenuItem>
                   {onExport && (
                     <DropdownMenuItem onClick={() => onExport(study.id)}>
                       <Download className="mr-2 h-4 w-4" />
-                      Export
+                      Quick export
                     </DropdownMenuItem>
                   )}
                   {onShare && (
