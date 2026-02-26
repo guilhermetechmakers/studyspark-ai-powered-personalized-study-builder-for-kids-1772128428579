@@ -16,6 +16,11 @@ import { StudyReviewPage } from '@/pages/study-review'
 import { StudyViewerPage } from '@/pages/study-viewer'
 import { SettingsPage } from '@/pages/settings'
 import { CheckoutPage } from '@/pages/checkout'
+import { PaymentsDashboardPage } from '@/pages/payments-dashboard'
+import { PaymentsInvoicesPage } from '@/pages/payments-invoices'
+import { PaymentsCheckoutPage } from '@/pages/payments-checkout'
+import { AdminPaymentsWebhooksPage } from '@/pages/admin-payments-webhooks'
+import { AdminWebhooksPage } from '@/pages/admin-webhooks'
 import { NotFoundPage } from '@/pages/not-found'
 import { ErrorPage } from '@/pages/error'
 import { AboutHelpPage } from '@/pages/about-help'
@@ -81,6 +86,9 @@ export const router = createBrowserRouter([
       { path: 'notifications/preferences', element: <NotificationPreferencesPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'checkout', element: <CheckoutPage /> },
+      { path: 'payments', element: <PaymentsDashboardPage /> },
+      { path: 'payments/invoices', element: <PaymentsInvoicesPage /> },
+      { path: 'payments/checkout', element: <PaymentsCheckoutPage /> },
       { path: 'analytics', element: <AnalyticsDashboardPage /> },
     ],
   },
@@ -100,6 +108,8 @@ export const router = createBrowserRouter([
       { path: 'analytics', element: <AdminAnalyticsPage /> },
       { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'health', element: <AdminHealthPage /> },
+      { path: 'webhooks', element: <AdminWebhooksPage /> },
+      { path: 'payments/webhooks', element: <AdminPaymentsWebhooksPage /> },
     ],
   },
   { path: '/search', element: <SearchRedirectPage /> },

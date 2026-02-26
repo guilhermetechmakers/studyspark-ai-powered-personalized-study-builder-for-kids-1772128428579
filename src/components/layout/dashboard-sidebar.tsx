@@ -10,6 +10,7 @@ import {
   Sparkles,
   Upload,
   ShoppingCart,
+  CreditCard,
   HelpCircle,
   Shield,
   User,
@@ -36,6 +37,7 @@ const navItems = [
   { to: '/dashboard/create', label: 'Create Study', icon: PlusCircle },
   { to: '/dashboard/upload-materials', label: 'Upload Materials', icon: Upload },
   { to: '/dashboard/checkout', label: 'Checkout', icon: ShoppingCart },
+  { to: '/dashboard/payments', label: 'Payments & Billing', icon: CreditCard },
 ]
 
 const bottomItems = [

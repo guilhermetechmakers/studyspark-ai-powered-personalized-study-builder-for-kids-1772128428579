@@ -14,6 +14,7 @@ import {
   Bell,
   LogOut,
   Mail,
+  Webhook,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,7 @@ const adminNavItems = [
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/admin/notifications', label: 'Notifications', icon: Mail },
   { to: '/admin/health', label: 'System Health', icon: Activity },
+  { to: '/admin/webhooks', label: 'Webhooks', icon: Webhook },
 ]
 
 export function AdminLayout() {
