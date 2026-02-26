@@ -54,3 +54,25 @@ export function doPasswordsMatch(password: string, confirmPassword: string): boo
   const c = confirmPassword ?? ''
   return p.length > 0 && p === c
 }
+
+/** Settings validation */
+
+const LEARNING_STYLE_VALUES = ['playful', 'exam-like', 'research-based', 'printable', 'interactive'] as const
+
+export function isValidChildAge(age: number | string): boolean {
+  const n = typeof age === 'string' ? parseInt(age, 10) : age
+  return Number.isInteger(n) && n >= 0 && n <= 18
+}
+
+export function isValidLearningStyle(value: string): value is (typeof LEARNING_STYLE_VALUES)[number] {
+  return LEARNING_STYLE_VALUES.includes(value as (typeof LEARNING_STYLE_VALUES)[number])
+}
+
+/** Safe array helpers for settings */
+export function mapGuarded<T, U>(items: T[] | null | undefined, fn: (item: T, i: number) => U): U[] {
+  return (items ?? []).map(fn)
+}
+
+export function toArraySafe<T>(data: T[] | null | undefined): T[] {
+  return Array.isArray(data) ? data : []
+}
