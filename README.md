@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# StudySpark - AI-Powered Personalized Study Builder for Kids
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+StudySpark is an AI-powered platform that enables parents to create personalized, age-appropriate study materials for their children in minutes.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework:** React 18 + TypeScript
+- **Build:** Vite
+- **Styling:** Tailwind CSS v3 + @tailwindcss/typography
+- **UI:** Radix UI primitives, Shadcn-style components
+- **Charts:** Recharts
+- **Forms:** React Hook Form + Zod
+- **Backend:** Supabase (Auth, Database, Storage, Edge Functions)
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Supabase URL and anon key
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. **Build**
+   ```bash
+   npm run build
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+4. **Preview production build**
+   ```bash
+   npm run preview
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `src/pages/` - Page components (Landing, Dashboard, Auth, etc.)
+- `src/components/` - Reusable UI components and layout
+- `src/lib/` - Utilities, Supabase client, API helpers
+- `src/routes.tsx` - React Router configuration
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Pages
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Landing** – Hero, features, how-it-works, pricing, FAQ
+- **Auth** – Login, Signup, Email verification, Password reset
+- **Dashboard** – Overview, Study Library, Create Study wizard
+- **Study Detail** – Review, edit, export, share
+- **Study Viewer** – Child-facing interactive player
+- **Settings** – Profile, children, notifications, billing, privacy
+- **Legal** – Privacy Policy, Terms, Cookie Policy
+- **Help** – Help center, FAQ, contact

@@ -1,68 +1,90 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* StudySpark palette - RGB values for theming */
+    --background: 255 249 242;
+    --foreground: 35 35 35;
+    --card: 255 255 255;
+    --card-foreground: 35 35 35;
+    --primary: 91 87 165;
+    --primary-foreground: 255 255 255;
+    --secondary: 169 166 249;
+    --secondary-foreground: 35 35 35;
+    --accent: 255 173 90;
+    --accent-foreground: 35 35 35;
+    --muted: 248 248 251;
+    --muted-foreground: 108 108 108;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 232 230 240;
+    --input: 232 230 240;
+    --ring: 91 87 165;
+    --radius: 0.75rem;
+
+    /* StudySpark brand tokens */
+    --peach-light: 255 231 207;
+    --peach: 255 212 166;
+    --lavender: 169 166 249;
+    --tangerine: 255 173 90;
+    --violet: 91 87 165;
+    --coral: 255 176 133;
+    --text-heading: 35 35 35;
+    --text-body: 108 108 108;
   }
-  a:hover {
-    color: #747bff;
+
+  .dark {
+    --background: 23 23 28;
+    --foreground: 248 248 251;
+    --card: 35 35 42;
+    --card-foreground: 248 248 251;
+    --primary: 169 166 249;
+    --primary-foreground: 35 35 35;
+    --secondary: 91 87 165;
+    --secondary-foreground: 255 255 255;
+    --accent: 255 173 90;
+    --accent-foreground: 35 35 35;
+    --muted: 45 45 55;
+    --muted-foreground: 180 180 190;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 55 55 65;
+    --input: 55 55 65;
+    --ring: 169 166 249;
   }
-  button {
-    background-color: #f9f9f9;
+
+  * {
+    @apply border-border;
   }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .animate-stagger > * {
+    animation: fade-in-up 0.4s ease-out forwards;
+  }
+  .animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 50ms; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 100ms; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 150ms; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 200ms; }
+  .animate-stagger > *:nth-child(6) { animation-delay: 250ms; }
 }

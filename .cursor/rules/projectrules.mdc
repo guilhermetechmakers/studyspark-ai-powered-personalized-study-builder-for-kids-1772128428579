@@ -1,0 +1,552 @@
+---
+alwaysApply: true
+---
+
+# Project Cursor Rules
+
+This file contains project-specific development rules and guidelines.
+These rules will be automatically applied when working in this project with Cursor.
+
+## Tech Stack Requirements
+
+- **Framework:** React 18 with TypeScript
+- **Build Tool:** Vite with SWC plugin
+- **Styling:** Tailwind CSS v3 with CSS custom properties
+- **UI Components:** Shadcn/ui with Radix UI primitives
+- **Animations:** Motion library (NOT framer-motion)
+- **Icons:** Lucide React
+- **State Management:** TanStack React Query
+- **Forms:** React Hook Form with Zod validation
+- **HTTP Client:** Axios
+- **Notifications:** Sonner
+- **Backend:** Supabase (Auth, Database, Storage, Realtime)
+- **Serverless Functions:** Supabase Edge Functions (Deno runtime)
+
+## Critical Setup Rules
+
+1. **ALWAYS run `npm install` before any build commands**
+2. Use Motion library for animations, NOT framer-motion
+3. Import Inter font in index.css
+4. Use Tailwind v3 with tailwind.config.js (not CSS-based config)
+5. Use `@/` path aliases for imports
+6. Use Shadcn components instead of custom UI components
+7. **Every project uses Supabase as the backend.** Initialize the Supabase client in a central `src/lib/supabase.ts` file
+8. Prefer Supabase Edge Functions (Deno) over custom API routes for server-side logic
+
+## Code Style
+
+- Write concise, technical TypeScript code
+- Use functional and declarative patterns (avoid classes)
+- Favor iteration and modularization over duplication
+- Use descriptive variable names with auxiliary verbs (isLoading, hasError)
+- Structure: exported components, subcomponents, helpers, types
+- Minimize `useEffect` and `useState`; favor React Server Components where possible
+
+## API Layer Pattern
+
+- Centralize API calls in `src/api/` directory
+- Use Axios with interceptors for auth and error handling
+- Create React Query hooks in `src/hooks/`
+- Implement proper error handling with toast notifications
+- Use TypeScript types for all API responses
+
+## Supabase Integration
+
+### Client Setup
+- Initialize the Supabase client in a central file (`src/lib/supabase.ts`)
+- Use `createClient` from `@supabase/supabase-js` with environment variables for URL and anon key
+- Never expose the service role key in client-side code
+- Use typed Supabase client with generated database types (`supabase gen types typescript`)
+
+### Edge Functions (Preferred for Server-Side Logic)
+- Use Supabase Edge Functions (Deno runtime) instead of custom API routes whenever possible
+- Edge Functions run on Deno Deploy — use `Deno.serve()` and import from `https://esm.sh/` or npm specifiers
+- Place Edge Functions in `supabase/functions/<function-name>/index.ts`
+- Use `supabase functions serve` for local development and `supabase functions deploy` for production
+- Edge Functions have access to `Deno.env.get()` for secrets — store secrets via `supabase secrets set`
+- Use Edge Functions for: webhooks, third-party API calls, data processing, scheduled tasks, and any logic that should not run on the client
+
+### Authentication
+- Use Supabase Auth for all authentication flows (email/password, OAuth, magic link)
+- Implement Row-Level Security (RLS) policies on all tables — never rely solely on client-side auth checks
+- Use `supabase.auth.getSession()` and `supabase.auth.onAuthStateChange()` to manage session state
+- Protect routes and API calls by verifying the user session
+
+### Database & Realtime
+- Use Supabase's PostgreSQL database with typed queries
+- Define database schema with migrations (`supabase migration new`)
+- Use Supabase Realtime subscriptions to keep UI in sync with database changes where appropriate
+- Leverage Supabase Storage for file uploads (images, documents)
+
+### Security
+- Enable RLS on every table — no exceptions
+- Use `auth.uid()` in RLS policies to scope data access to the authenticated user
+- Validate all inputs with Zod before sending to Supabase
+- Never trust client-side data — validate and sanitize in Edge Functions
+
+## API Integrations
+
+**When building any third-party API integration, ALWAYS search the web for the latest official documentation first.** Do not rely on memorized or outdated API knowledge — APIs change frequently.
+
+### Rules for API Integrations
+1. **Search docs first:** Before writing any integration code, look up the current official API documentation, SDKs, and changelog for the service
+2. **Always use Edge Functions:** All API integrations with external services MUST be implemented as Supabase Edge Functions — never call third-party APIs directly from the client
+3. **Never expose API keys on the client:** Store all API keys and secrets using `supabase secrets set` and access them via `Deno.env.get()` inside Edge Functions
+4. **Use official SDKs when available:** Prefer the official SDK/client library for the service (import via `npm:` specifier or `https://esm.sh/` in Deno)
+5. **Handle rate limits and errors:** Implement retry logic with exponential backoff, respect rate limit headers, and return meaningful error responses to the client
+6. **Type all responses:** Define TypeScript interfaces for all external API request/response shapes
+7. **Validate payloads:** Use Zod to validate both incoming requests to the Edge Function and responses from the external API
+8. **Document the integration:** Add a brief comment at the top of each Edge Function describing which API it integrates with, the endpoint(s) used, and any required secrets
+
+### Edge Function Integration Pattern
+```
+supabase/functions/<service-name>/index.ts   → the Edge Function entry point
+```
+- Accept structured JSON from the client, validate with Zod
+- Call the external API using fetch or the official SDK
+- Transform and return the response
+- Log errors server-side, return safe error messages to the client
+
+## Design System
+
+
+
+
+---
+
+## Design Reference (Complete Guidelines)
+
+**This section contains the complete design guidelines for this project:**
+
+# Modern Design Best Practices
+
+## Philosophy
+
+Create unique, memorable experiences while maintaining consistency through modern design principles. Every project should feel distinct yet professional, innovative yet intuitive.
+
+---
+
+## Landing Pages & Marketing Sites
+
+### Hero Sections
+**Go beyond static backgrounds:**
+- Animated gradients with subtle movement
+- Particle systems or geometric shapes floating
+- Interactive canvas backgrounds (Three.js, WebGL)
+- Video backgrounds with proper fallbacks
+- Parallax scrolling effects
+- Gradient mesh animations
+- Morphing blob animations
+
+
+### Layout Patterns
+**Use modern grid systems:**
+- Bento grids (asymmetric card layouts)
+- Masonry layouts for varied content
+- Feature sections with diagonal cuts or curves
+- Overlapping elements with proper z-index
+- Split-screen designs with scroll-triggered reveals
+
+**Avoid:** Traditional 3-column equal grids
+
+### Scroll Animations
+**Engage users as they scroll:**
+- Fade-in and slide-up animations for sections
+- Scroll-triggered parallax effects
+- Progress indicators for long pages
+- Sticky elements that transform on scroll
+- Horizontal scroll sections for portfolios
+- Text reveal animations (word by word, letter by letter)
+- Number counters animating into view
+
+**Avoid:** Static pages with no scroll interaction
+
+### Call-to-Action Areas
+**Make CTAs impossible to miss:**
+- Gradient buttons with hover effects
+- Floating action buttons with micro-interactions
+- Animated borders or glowing effects
+- Scale/lift on hover
+- Interactive elements that respond to mouse position
+- Pulsing indicators for primary actions
+
+---
+
+## Dashboard Applications
+
+### Layout Structure
+**Always use collapsible side navigation:**
+- Sidebar that can collapse to icons only
+- Smooth transition animations between states
+- Persistent navigation state (remember user preference)
+- Mobile: drawer that slides in/out
+- Desktop: sidebar with expand/collapse toggle
+- Icons visible even when collapsed
+
+**Structure:**
+```
+/dashboard (layout wrapper with sidebar)
+  /dashboard/overview
+  /dashboard/analytics
+  /dashboard/settings
+  /dashboard/users
+  /dashboard/projects
+```
+
+All dashboard pages should be nested inside the dashboard layout, not separate routes.
+
+### Data Tables
+**Modern table design:**
+- Sticky headers on scroll
+- Row hover states with subtle elevation
+- Sortable columns with clear indicators
+- Pagination with items-per-page control
+- Search/filter with instant feedback
+- Selection checkboxes with bulk actions
+- Responsive: cards on mobile, table on desktop
+- Loading skeletons, not spinners
+- Empty states with illustrations or helpful text
+
+**Use modern table libraries:**
+- TanStack Table (React Table v8)
+- AG Grid for complex data
+- Data Grid from MUI (if using MUI)
+
+### Charts & Visualizations
+**Use the latest charting libraries:**
+- Recharts (for React, simple charts)
+- Chart.js v4 (versatile, well-maintained)
+- Apache ECharts (advanced, interactive)
+- D3.js (custom, complex visualizations)
+- Tremor (for dashboards, built on Recharts)
+
+**Chart best practices:**
+- Animated transitions when data changes
+- Interactive tooltips with detailed info
+- Responsive sizing
+- Color scheme matching design system
+- Legend placement that doesn't obstruct data
+- Loading states while fetching data
+
+### Dashboard Cards
+**Metric cards should stand out:**
+- Gradient backgrounds or colored accents
+- Trend indicators (↑ ↓ with color coding)
+- Sparkline charts for historical data
+- Hover effects revealing more detail
+- Icon representing the metric
+- Comparison to previous period
+
+---
+
+## Color & Visual Design
+
+### Color Palettes
+**Create depth with gradients:**
+- Primary gradient (not just solid primary color)
+- Subtle background gradients
+- Gradient text for headings
+- Gradient borders on cards
+- Elevated surfaces for depth
+
+**Color usage:**
+- 60-30-10 rule (dominant, secondary, accent)
+- Consistent semantic colors (success, warning, error)
+- Accessible contrast ratios (WCAG AA minimum)
+
+### Typography
+**Create hierarchy through contrast:**
+- Large, bold headings (48-72px for heroes)
+- Clear size differences between levels
+- Variable font weights (300, 400, 600, 700)
+- Letter spacing for small caps
+- Line height 1.5-1.7 for body text
+- Inter, Poppins, or DM Sans for modern feel
+
+### Shadows & Depth
+**Layer UI elements:**
+- Multi-layer shadows for realistic depth
+- Colored shadows matching element color
+- Elevated states on hover
+- Neumorphism for special elements (sparingly)
+
+---
+
+## Interactions & Micro-animations
+
+### Button Interactions
+**Every button should react:**
+- Scale slightly on hover (1.02-1.05)
+- Lift with shadow on hover
+- Ripple effect on click
+- Loading state with spinner or progress
+- Disabled state clearly visible
+- Success state with checkmark animation
+
+### Card Interactions
+**Make cards feel alive:**
+- Lift on hover with increased shadow
+- Subtle border glow on hover
+- Tilt effect following mouse (3D transform)
+- Smooth transitions (200-300ms)
+- Click feedback for interactive cards
+
+### Form Interactions
+**Guide users through forms:**
+- Input focus states with border color change
+- Floating labels that animate up
+- Real-time validation with inline messages
+- Success checkmarks for valid inputs
+- Error states with shake animation
+- Password strength indicators
+- Character count for text areas
+
+### Page Transitions
+**Smooth between views:**
+- Fade + slide for page changes
+- Skeleton loaders during data fetch
+- Optimistic UI updates
+- Stagger animations for lists
+- Route transition animations
+
+---
+
+## Mobile Responsiveness
+
+### Mobile-First Approach
+**Design for mobile, enhance for desktop:**
+- Touch targets minimum 44x44px
+- Generous padding and spacing
+- Sticky bottom navigation on mobile
+- Collapsible sections for long content
+- Swipeable cards and galleries
+- Pull-to-refresh where appropriate
+
+### Responsive Patterns
+**Adapt layouts intelligently:**
+- Hamburger menu → full nav bar
+- Card grid → stack on mobile
+- Sidebar → drawer
+- Multi-column → single column
+- Data tables → card list
+- Hide/show elements based on viewport
+
+---
+
+## Loading & Empty States
+
+### Loading States
+**Never leave users wondering:**
+- Skeleton screens matching content layout
+- Progress bars for known durations
+- Animated placeholders
+- Spinners only for short waits (<3s)
+- Stagger loading for multiple elements
+- Shimmer effects on skeletons
+
+### Empty States
+**Make empty states helpful:**
+- Illustrations or icons
+- Helpful copy explaining why it's empty
+- Clear CTA to add first item
+- Examples or suggestions
+- No "no data" text alone
+
+---
+
+## Unique Elements to Stand Out
+
+### Distinctive Features
+**Add personality:**
+- Custom cursor effects on landing pages
+- Animated page numbers or section indicators
+- Unusual hover effects (magnification, distortion)
+- Custom scrollbars
+- Glassmorphism for overlays
+- Animated SVG icons
+- Typewriter effects for hero text
+- Confetti or celebration animations for actions
+
+### Interactive Elements
+**Engage users:**
+- Drag-and-drop interfaces
+- Sliders and range controls
+- Toggle switches with animations
+- Progress steps with animations
+- Expandable/collapsible sections
+- Tabs with slide indicators
+- Image comparison sliders
+- Interactive demos or playgrounds
+
+---
+
+## Consistency Rules
+
+### Maintain Consistency
+**What should stay consistent:**
+- Spacing scale (4px, 8px, 16px, 24px, 32px, 48px, 64px)
+- Border radius values
+- Animation timing (200ms, 300ms, 500ms)
+- Color system (primary, secondary, accent, neutrals)
+- Typography scale
+- Icon style (outline vs filled)
+- Button styles across the app
+- Form element styles
+
+### What Can Vary
+**Project-specific customization:**
+- Color palette (different colors, same system)
+- Layout creativity (grids, asymmetry)
+- Illustration style
+- Animation personality
+- Feature-specific interactions
+- Hero section design
+- Card styling variations
+- Background patterns or textures
+
+---
+
+## Technical Excellence
+
+### Performance
+- Optimize images (WebP, lazy loading)
+- Code splitting for faster loads
+- Debounce search inputs
+- Virtualize long lists
+- Minimize re-renders
+- Use proper memoization
+
+### Accessibility
+- Keyboard navigation throughout
+- ARIA labels where needed
+- Focus indicators visible
+- Screen reader friendly
+- Sufficient color contrast
+- Respect reduced motion preferences
+
+---
+
+## Key Principles
+
+1. **Be Bold** - Don't be afraid to try unique layouts and interactions
+2. **Be Consistent** - Use the same patterns for similar functions
+3. **Be Responsive** - Design works beautifully on all devices
+4. **Be Fast** - Animations are smooth, loading is quick
+5. **Be Accessible** - Everyone can use what you build
+6. **Be Modern** - Use current design trends and technologies
+7. **Be Unique** - Each project should have its own personality
+8. **Be Intuitive** - Users shouldn't need instructions
+
+
+---
+
+### Quick Design Checklist
+
+- [ ] Applied project color palette and typography from Design Reference above
+- [ ] Implemented responsive breakpoints
+- [ ] Added hover states and micro-interactions
+- [ ] Used consistent spacing scale
+- [ ] Ensured accessibility (keyboard nav, ARIA, contrast)
+
+## Component Patterns & Visual Design System
+
+**Don't design "component by component." Design with a small visual system (radius, shadow, border, spacing, states, tokens).**
+
+### 1. Radius Scale (Not Random Corner Values)
+- 2px: tiny elements (badges, checkboxes)
+- 4–6px: inputs, buttons
+- 8–12px: cards, menus, modals
+- 999px / 50%: pills, avatars
+
+### 2. Shadows as Elevation (Not Decoration)
+- Flat content = no shadow (use border/spacing)
+- Movable cards / hover surfaces = light shadow
+- Menus / popovers / dialogs = stronger overlay shadow
+- Use a few clear elevation levels: base (0), raised card (1), overlay/modal (2–3)
+
+### 3. Dark Mode: Shadows Are Not Enough
+- Use surface color shifts + shadow (higher surfaces are lighter in dark mode)
+- Don't reuse the exact same light-mode shadow recipe in dark mode
+- Pair raised/overlay levels with both surface color changes and shadows
+
+### 4. Borders for Structure (Subtle Strokes > Heavy Shadows)
+- Card: soft surface + 1px border
+- Active tab / selected item: 2px accent border
+- Focus: visible ring (not just color shift)
+- Use 1px default borders and 2px for selected/focus indicators
+
+### 5. Focus Rings Aligned with Component Radius
+- Focus ring offset = 2px
+- Focus ring radius = component radius + 2px
+- Keep focus states visually aligned with the component shape
+
+### 6. Spacing on a Token Scale (2/4/8 System)
+- Use a consistent scale: 4px / 8px / 12px / 16px / 24px / 32px / 48px
+- Spacing tokens control both component internals and layout density
+- Spacing creates hierarchy and grouping (without extra borders/shadows)
+
+### 7. Design Tokens for Everything Visual
+- Never hardcode visual values — use semantic design tokens
+- Tokens for: color, radius, spacing, elevation, border
+- Enables easy theme changes, consistent UI across platforms, cleaner handoff
+- Semantic names: `surface`, `surface-raised`, `border-default`, `radius-md`, etc.
+
+### 8. Interaction States Must Be Obvious
+- Define every state: hover, pressed, selected, focused, disabled
+- Use one primary signal per state (color OR elevation OR border), not all at once
+- Don't overuse elevation transitions (avoid visual noise)
+
+### 9. Accessibility Is Part of Visual Design
+- Text contrast: 4.5:1 for normal text (WCAG)
+- Non-text contrast: 3:1 for controls, focus rings, icons
+- Clear focus visibility (Focus Not Obscured, WCAG 2.2)
+- Larger target sizes (minimum per WCAG 2.2)
+
+### 10. Blur/Glass Effects: Sparingly and Intentionally
+- Use backdrop-filter only for: overlays, command palettes, sticky bars, side panels
+- Not entire pages — keep contrast high
+- Controlled usage only
+
+### 11. Respect Reduced Motion
+- Use motion to support feedback and hierarchy only
+- Support `prefers-reduced-motion` — reduce or remove animation/transitions for users who request it
+
+### Modern Default Setup (Baseline)
+- **Radius:** 4 / 8 / 12 / full
+- **Border:** 1px neutral stroke, 2px for focus/selected
+- **Elevation:** 0 (base), 1 (raised card), 2 (popover), 3 (modal)
+- **Spacing:** 4/8-based scale
+- **States:** hover + pressed + focus defined for every interactive component
+- **Tokens:** semantic names (`surface`, `surface-raised`, `border-default`, `radius-md`, etc.)
+- **Dark mode:** separate surface/elevation values (not just inverted colors)
+
+### Component Implementation
+- Wrap all pages with animation components
+- Use `cn()` utility for conditional classes
+- Implement loading skeletons (not spinners)
+- Create helpful empty states with illustrations
+- Add error boundaries for robust error handling
+
+
+
+## Performance & Best Practices
+
+- Optimize images: WebP format, lazy loading
+- Implement code splitting with dynamic imports
+- Use proper memoization to minimize re-renders
+- Debounce search inputs
+- Virtualize long lists
+- Respect prefers-reduced-motion
+
+
+## Testing
+
+- Write unit tests for components
+- Mock API interactions in tests
+- Test error scenarios and edge cases
+
+
+
+---
+
+For complete reference, see BUILD_GUIDE.md in the project root.
