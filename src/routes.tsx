@@ -11,6 +11,7 @@ import { StudyDetailPage } from '@/pages/study-detail'
 import { StudyReviewPage } from '@/pages/study-review'
 import { StudyViewerPage } from '@/pages/study-viewer'
 import { SettingsPage } from '@/pages/settings'
+import { CheckoutPage } from '@/pages/checkout'
 import { NotFoundPage } from '@/pages/not-found'
 import { ErrorPage } from '@/pages/error'
 import { HelpPage } from '@/pages/help'
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
       { path: 'create', element: <CreateStudyWizard /> },
       { path: 'upload-materials', element: <UploadMaterialsPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'checkout', element: <CheckoutPage /> },
     ],
   },
   { path: '/study/:id/play', element: <StudyViewerPage /> },

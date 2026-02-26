@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Sparkles,
   Upload,
+  ShoppingCart,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ const navItems = [
   { to: '/dashboard/studies', label: 'Study Library', icon: FolderOpen },
   { to: '/dashboard/create', label: 'Create Study', icon: PlusCircle },
   { to: '/dashboard/upload-materials', label: 'Upload Materials', icon: Upload },
+  { to: '/dashboard/checkout', label: 'Checkout', icon: ShoppingCart },
 ]
 
 const bottomItems = [
