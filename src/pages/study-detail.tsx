@@ -21,9 +21,11 @@ export function StudyDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/dashboard/studies/${id}`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
           </Button>
           <Button variant="outline" size="sm">
             <Share2 className="mr-2 h-4 w-4" />

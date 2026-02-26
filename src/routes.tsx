@@ -8,6 +8,7 @@ import { DashboardStudies } from '@/pages/dashboard-studies'
 import { CreateStudyWizard } from '@/pages/create-study-wizard'
 import { UploadMaterialsPage } from '@/pages/upload-materials'
 import { StudyDetailPage } from '@/pages/study-detail'
+import { StudyReviewPage } from '@/pages/study-review'
 import { StudyViewerPage } from '@/pages/study-viewer'
 import { SettingsPage } from '@/pages/settings'
 import { NotFoundPage } from '@/pages/not-found'
@@ -72,7 +73,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardOverview /> },
       { path: 'studies', element: <DashboardStudies /> },
-      { path: 'studies/:id', element: <StudyDetailPage /> },
+      { path: 'studies/:id', element: <StudyReviewPage /> },
+      { path: 'studies/:id/detail', element: <StudyDetailPage /> },
       { path: 'create', element: <CreateStudyWizard /> },
       { path: 'upload-materials', element: <UploadMaterialsPage /> },
       { path: 'settings', element: <SettingsPage /> },
