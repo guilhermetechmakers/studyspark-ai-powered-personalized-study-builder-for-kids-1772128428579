@@ -8,53 +8,57 @@ export interface DataCategory {
   description: string
 }
 
-export interface DataTypesSectionProps {
-  categories?: DataCategory[]
-}
-
-const defaultCategories: DataCategory[] = [
+const DEFAULT_DATA_CATEGORIES: DataCategory[] = [
   {
     id: 'account',
-    name: 'Account information',
-    description: 'Email address, name, and password. Used to create and manage your parent account.',
+    name: 'Account Information',
+    description: 'Email address, name, and password you provide when creating an account.',
   },
   {
     id: 'child-profiles',
-    name: 'Child profiles',
-    description: 'Child name, grade level, learning preferences, and interests. Used to personalize study content.',
+    name: 'Child Profiles',
+    description: 'Your child\'s name, grade level, learning preferences, and interests you choose to share.',
   },
   {
     id: 'uploaded-materials',
-    name: 'Uploaded materials',
-    description: 'Documents, images, or text you upload. Processed to generate study materials.',
+    name: 'Uploaded Materials',
+    description: 'Documents, images, or text you upload to generate study content.',
   },
   {
     id: 'usage-data',
-    name: 'Usage data',
-    description: 'How you and your child use the app: study sessions, progress, and feature usage.',
+    name: 'Usage Data',
+    description: 'How you and your child interact with the app (e.g., study sessions, progress, quiz results).',
   },
   {
     id: 'device-data',
-    name: 'Device data',
-    description: 'Device type, browser, and IP address. Used for security and compatibility.',
+    name: 'Device Data',
+    description: 'Device type, browser, and general location (country/region) for service optimization.',
   },
 ]
 
-export function DataTypesSection({ categories = defaultCategories }: DataTypesSectionProps) {
-  const safeCategories = Array.isArray(categories) ? categories : defaultCategories
+export interface DataTypesSectionProps {
+  categories?: DataCategory[]
+  className?: string
+}
+
+export function DataTypesSection({
+  categories = DEFAULT_DATA_CATEGORIES,
+  className,
+}: DataTypesSectionProps) {
+  const safeCategories = Array.isArray(categories) ? categories : DEFAULT_DATA_CATEGORIES
 
   return (
-    <SectionCard title="Data We Collect" icon={Database}>
-      <p className="text-base leading-relaxed">
-        We collect only the data necessary to provide and improve our service. Here are the main categories:
+    <SectionCard title="Data We Collect" icon={Database} className={className}>
+      <p className="mb-4 text-base leading-relaxed">
+        We collect the following categories of data to provide and improve our services:
       </p>
       <ul className="space-y-4" role="list">
-        {safeCategories.map((cat) => (
-          <li key={cat.id} className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
+        {(safeCategories ?? []).map((cat) => (
+          <li key={cat.id} className="flex flex-col gap-1">
+            <span className="flex items-center gap-2">
               <PillLabel>{cat.name}</PillLabel>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">{cat.description}</p>
+            </span>
+            <span className="text-base text-foreground/90">{cat.description}</span>
           </li>
         ))}
       </ul>

@@ -16,6 +16,7 @@ import { NotFoundPage } from '@/pages/not-found'
 import { ErrorPage } from '@/pages/error'
 import { AboutHelpPage } from '@/pages/about-help'
 import { LegalPage } from '@/pages/legal'
+import { PrivacyPolicyPage } from '@/pages/privacy-policy'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { AdminOverviewPage } from '@/pages/admin-overview'
@@ -24,20 +25,6 @@ import { AdminModerationPage } from '@/pages/admin-moderation'
 import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
-
-const privacyContent = `
-<p>StudySpark ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our platform.</p>
-<h3>Information We Collect</h3>
-<p>We collect information you provide directly, such as account details, child profiles, and uploaded materials. We also collect usage data to improve our services.</p>
-<h3>How We Use Your Information</h3>
-<p>We use your information to provide, maintain, and improve our services; to personalize content; and to communicate with you. We do not sell your personal information.</p>
-<h3>Children's Privacy</h3>
-<p>We comply with COPPA and GDPR. We collect minimal child data necessary for the service. Parents control all child profiles and data.</p>
-<h3>Data Security</h3>
-<p>We use encryption and secure storage. Access is restricted and audited.</p>
-<h3>Contact</h3>
-<p>For questions, contact us at privacy@studyspark.com.</p>
-`
 
 const termsContent = `
 <p>By using StudySpark, you agree to these Terms of Service.</p>
@@ -73,7 +60,8 @@ export const router = createBrowserRouter([
   { path: '/help', element: <AboutHelpPage /> },
   { path: '/about', element: <AboutHelpPage /> },
   { path: '/about-help', element: <AboutHelpPage /> },
-  { path: '/privacy', element: <LegalPage title="Privacy Policy" content={privacyContent} /> },
+  { path: '/privacy', element: <PrivacyPolicyPage /> },
+  { path: '/privacy-policy', element: <PrivacyPolicyPage /> },
   { path: '/terms', element: <LegalPage title="Terms of Service" content={termsContent} /> },
   { path: '/cookies', element: <LegalPage title="Cookie Policy" content={cookiesContent} /> },
   {

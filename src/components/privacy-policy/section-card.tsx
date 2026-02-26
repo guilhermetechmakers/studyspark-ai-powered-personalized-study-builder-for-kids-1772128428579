@@ -8,14 +8,20 @@ export interface SectionCardProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: LucideIcon
 }
 
+function toSectionId(title: string): string {
+  return title.replace(/\s+/g, '-').toLowerCase().replace(/[^a-z0-9-]/g, '')
+}
+
 export function SectionCard({ title, children, icon: Icon, className, ...props }: SectionCardProps) {
+  const sectionId = toSectionId(title)
   return (
     <article
+      id={sectionId}
       className={cn(
         'rounded-[20px] border border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/40 via-white to-[rgb(var(--lavender))]/20 p-6 md:p-8 shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5',
         className
       )}
-      aria-labelledby={title.replace(/\s+/g, '-').toLowerCase()}
+      aria-labelledby={`${sectionId}-heading`}
       {...props}
     >
       <div className="mb-4 flex items-center gap-3">
@@ -25,7 +31,7 @@ export function SectionCard({ title, children, icon: Icon, className, ...props }
           </div>
         )}
         <h2
-          id={title.replace(/\s+/g, '-').toLowerCase()}
+          id={`${sectionId}-heading`}
           className="text-xl font-bold text-foreground md:text-2xl"
         >
           {title}
