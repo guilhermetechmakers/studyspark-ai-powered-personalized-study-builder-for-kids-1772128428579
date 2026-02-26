@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useRef } from 'react'
+import { useReducer, useCallback, useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FileText,
@@ -24,7 +24,23 @@ import {
   SidebarPanel,
   PreviewCard,
   WizardOverview,
+  StatusBadge,
+  VersioningPanel,
+  LayoutPreview,
+  SettingsDrawer,
 } from '@/components/study-wizard'
+import { fetchChildProfiles } from '@/api/profile'
+import {
+  prepareStudy,
+  streamStudyGeneration,
+  reviseStudy,
+  createVersion,
+  approveStudy,
+  exportStudy,
+  fetchStudyVersions,
+} from '@/api/studies'
+import { GRADE_LEVELS } from '@/types/profile'
+import type { VersionMetadata } from '@/types/study-builder'
 import type {
   TopicContext,
   Material,
@@ -50,25 +66,15 @@ const MOCK_CHILDREN: ChildProfile[] = [
 ]
 
 const MOCK_OUTPUT_BLOCKS: AIOutputBlock[] = [
-  {
-    type: 'text',
-    content:
-      '## Fractions Overview\n\nFractions represent parts of a whole. The top number (numerator) shows how many parts we have. The bottom number (denominator) shows how many equal parts the whole is divided into.',
-    order: 0,
-  },
-  {
-    type: 'list',
-    content:
-      '- 1/2 means one half\n- 1/4 means one quarter\n- 3/4 means three quarters',
-    order: 1,
-  },
-  {
-    type: 'text',
-    content:
-      '## Key Concepts\n\nWhen adding fractions with the same denominator, add the numerators and keep the denominator the same.',
-    order: 2,
-  },
+  { type: 'text', content: '## Overview\n\nThis study set covers the key concepts.', order: 0 },
+  { type: 'list', content: '- Key point 1\n- Key point 2\n- Key point 3', order: 1 },
+  { type: 'text', content: '## Key Concepts\n\nReview these before practice.', order: 2 },
 ]
+
+function mapProfileChildToWizardChild(c: { id: string; name: string; age: number; grade: string }): ChildProfile {
+  const label = GRADE_LEVELS.find((g) => g.value === c.grade)?.label ?? c.grade
+  return { id: c.id, name: c.name, age: c.age, grade: label }
+}
 
 interface WizardState {
   step: number
@@ -79,6 +85,8 @@ interface WizardState {
   generationOptions: GenerationOptions
   aiBlocks: AIOutputBlock[]
   versions: Version[]
+  versionsMetadata: VersionMetadata[]
+  studyId: string | null
   isGenerating: boolean
   generationProgress: number
   generationError: string | null
@@ -100,6 +108,8 @@ const INITIAL_STATE: WizardState = {
   },
   aiBlocks: [],
   versions: [],
+  versionsMetadata: [],
+  studyId: null,
   isGenerating: false,
   generationProgress: 0,
   generationError: null,
@@ -117,6 +127,7 @@ type WizardAction =
   | { type: 'SET_OPTIONS'; value: GenerationOptions }
   | { type: 'SET_BLOCKS'; value: AIOutputBlock[] }
   | { type: 'ADD_BLOCK'; block: AIOutputBlock }
+  | { type: 'SET_STUDY_ID'; studyId: string | null }
   | { type: 'SET_GENERATING'; value: boolean }
   | { type: 'SET_PROGRESS'; value: number }
   | { type: 'SET_ERROR'; value: string | null }
@@ -125,6 +136,8 @@ type WizardAction =
   | { type: 'SET_EXPORTING'; value: boolean }
   | { type: 'ADD_VERSION'; version: Version }
   | { type: 'SET_OCR_STATUS'; materialId: string; status: import('@/types/study-wizard').OCRStatus }
+  | { type: 'SET_VERSIONS'; versions: Version[] }
+  | { type: 'SET_VERSIONS_METADATA'; versions: VersionMetadata[] }
 
 function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
@@ -144,6 +157,8 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, aiBlocks: action.value }
     case 'ADD_BLOCK':
       return { ...state, aiBlocks: [...(state.aiBlocks ?? []), action.block] }
+    case 'SET_STUDY_ID':
+      return { ...state, studyId: action.studyId }
     case 'SET_GENERATING':
       return { ...state, isGenerating: action.value }
     case 'SET_PROGRESS':
@@ -164,6 +179,19 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
         materials: (state.materials ?? []).map((m) =>
           m.id === action.materialId ? { ...m, ocrStatus: action.status } : m
         ),
+      }
+    case 'SET_VERSIONS':
+      return { ...state, versions: action.versions }
+    case 'SET_VERSIONS_METADATA':
+      return {
+        ...state,
+        versionsMetadata: action.versions,
+        versions: action.versions.map((v) => ({
+          id: v.id,
+          studyId: v.studyId,
+          snapshot: {},
+          createdAt: v.createdAt,
+        })),
       }
     default:
       return state
@@ -199,10 +227,30 @@ function validateStep(
 export function StudyWizardContainer() {
   const navigate = useNavigate()
   const [state, dispatch] = useReducer(wizardReducer, INITIAL_STATE)
+  const [children, setChildren] = useState<ChildProfile[]>([])
   const abortRef = useRef(false)
 
-  const children = MOCK_CHILDREN
-  const selectedChild = (children ?? []).find((c) => c.id === state.selectedChildId) ?? null
+  useEffect(() => {
+    fetchChildProfiles()
+      .then((list) => {
+        const mapped = (list ?? []).map(mapProfileChildToWizardChild)
+        setChildren(mapped.length > 0 ? mapped : MOCK_CHILDREN)
+      })
+      .catch(() => setChildren(MOCK_CHILDREN))
+  }, [])
+
+  useEffect(() => {
+    if (state.studyId) {
+      fetchStudyVersions(state.studyId)
+        .then((list) => {
+          dispatch({ type: 'SET_VERSIONS_METADATA', versions: list ?? [] })
+        })
+        .catch(() => {})
+    }
+  }, [state.studyId])
+
+  const displayChildren = (children ?? []).length > 0 ? children : MOCK_CHILDREN
+  const selectedChild = (displayChildren ?? []).find((c) => c.id === state.selectedChildId) ?? null
 
   const progress = state.step === 0 ? 0 : (state.step / (STEPS?.length ?? 6)) * 100
 
@@ -231,53 +279,108 @@ export function StudyWizardContainer() {
 
   const simulateStreaming = useCallback(async () => {
     abortRef.current = false
+    const blocks = MOCK_OUTPUT_BLOCKS ?? []
+    const interval = 800
+    for (let i = 0; i < blocks.length; i++) {
+      if (abortRef.current) break
+      await new Promise((r) => setTimeout(r, interval))
+      dispatch({ type: 'ADD_BLOCK', block: blocks[i] })
+      dispatch({ type: 'SET_PROGRESS', value: ((i + 1) / (blocks.length + 1)) * 100 })
+    }
+    if (!abortRef.current) {
+      dispatch({ type: 'SET_PROGRESS', value: 100 })
+      dispatch({ type: 'SET_STEP', step: 6 })
+    }
+  }, [])
+
+  const handleStartGeneration = useCallback(async () => {
+    abortRef.current = false
     dispatch({ type: 'SET_GENERATING', value: true })
     dispatch({ type: 'SET_PROGRESS', value: 0 })
     dispatch({ type: 'SET_BLOCKS', value: [] })
     dispatch({ type: 'SET_ERROR', value: null })
 
-    const blocks = MOCK_OUTPUT_BLOCKS ?? []
-    const interval = 1000 / (blocks.length + 1)
-    let p = 0
+    const hasSupabase = Boolean(
+      import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
+    )
 
-    for (let i = 0; i < blocks.length; i++) {
-      if (abortRef.current) break
-      await new Promise((r) => setTimeout(r, interval))
-      dispatch({ type: 'ADD_BLOCK', block: blocks[i] })
-      p = ((i + 1) / (blocks.length + 1)) * 100
-      dispatch({ type: 'SET_PROGRESS', value: p })
+    if (!hasSupabase) {
+      simulateStreaming().finally(() => dispatch({ type: 'SET_GENERATING', value: false }))
+      return
     }
 
-    if (!abortRef.current) {
-      dispatch({ type: 'SET_PROGRESS', value: 100 })
-      dispatch({ type: 'SET_STEP', step: 6 })
-    }
-    dispatch({ type: 'SET_GENERATING', value: false })
-  }, [])
+    try {
+      const payload = {
+        topic: state.topicContext?.topic ?? '',
+        subject: state.topicContext?.subject,
+        contextNotes: state.topicContext?.contextNotes,
+        uploadedMaterials: (state.materials ?? []).map((m) => ({
+          id: m.id,
+          type: m.type,
+          sourceUrl: m.url,
+          metadata: {},
+        })),
+        childProfile: selectedChild
+          ? { id: selectedChild.id, age: selectedChild.age, grade: selectedChild.grade, learningPreferences: [] }
+          : { id: '', age: 8, grade: '3', learningPreferences: [] },
+        learningStyle: state.learningStyle ?? 'playful',
+      }
 
-  const handleStartGeneration = useCallback(() => {
-    simulateStreaming()
-  }, [simulateStreaming])
+      const prepared = await prepareStudy(payload)
+      const sid = (prepared as { studyId?: string })?.studyId
+      if (!sid) {
+        toast.error('Failed to prepare study')
+        simulateStreaming().finally(() => dispatch({ type: 'SET_GENERATING', value: false }))
+        return
+      }
+
+      dispatch({ type: 'SET_STUDY_ID', studyId: sid })
+
+      await streamStudyGeneration(
+        sid,
+        {
+          onBlock: (block) => dispatch({ type: 'ADD_BLOCK', block }),
+          onProgress: (pct) => dispatch({ type: 'SET_PROGRESS', value: pct }),
+          onComplete: () => {
+            dispatch({ type: 'SET_PROGRESS', value: 100 })
+            dispatch({ type: 'SET_STEP', step: 6 })
+          },
+          onError: (err) => {
+            dispatch({ type: 'SET_ERROR', value: err.message })
+            toast.error(err.message)
+          },
+        }
+      )
+    } catch (err) {
+      toast.info('Using offline preview')
+      simulateStreaming()
+    } finally {
+      dispatch({ type: 'SET_GENERATING', value: false })
+    }
+  }, [state.topicContext, state.materials, state.learningStyle, selectedChild, simulateStreaming])
 
   const handleCancelGeneration = useCallback(() => {
     abortRef.current = true
   }, [])
 
-  const handleApprove = useCallback(() => {
+  const handleApprove = useCallback(async () => {
+    const studyId = state.studyId
+    if (!studyId) {
+      toast.error('No study to approve')
+      return
+    }
     dispatch({ type: 'SET_APPROVING', value: true })
-    dispatch({
-      type: 'ADD_VERSION',
-      version: {
-        id: `v-${Date.now()}`,
-        studyId: 'mock',
-        snapshot: { ...state },
-        createdAt: new Date().toISOString(),
-      },
-    })
-    toast.success('Study approved!')
-    dispatch({ type: 'SET_APPROVING', value: false })
-    navigate('/dashboard/studies')
-  }, [state, navigate])
+    try {
+      await createVersion(studyId)
+      await approveStudy(studyId)
+      toast.success('Study approved!')
+      navigate('/dashboard/studies')
+    } catch (err) {
+      toast.error((err as Error).message)
+    } finally {
+      dispatch({ type: 'SET_APPROVING', value: false })
+    }
+  }, [state.studyId, navigate])
 
   const handleDuplicate = useCallback(() => {
     dispatch({ type: 'SET_DUPLICATING', value: true })
@@ -285,16 +388,77 @@ export function StudyWizardContainer() {
     dispatch({ type: 'SET_DUPLICATING', value: false })
   }, [])
 
-  const handleExport = useCallback((format: 'pdf' | 'json') => {
+  const handleExport = useCallback(async (format: 'pdf' | 'json') => {
+    const studyId = state.studyId
+    if (!studyId) {
+      if (format === 'json') {
+        const blob = new Blob(
+          [JSON.stringify({ blocks: state.aiBlocks, topicContext: state.topicContext }, null, 2)],
+          { type: 'application/json' }
+        )
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'study-export.json'
+        a.click()
+        URL.revokeObjectURL(url)
+        toast.success('Exported as JSON')
+      } else {
+        toast.error('No study to export')
+      }
+      return
+    }
     dispatch({ type: 'SET_EXPORTING', value: true })
-    toast.success(`Exporting as ${format.toUpperCase()}...`)
-    dispatch({ type: 'SET_EXPORTING', value: false })
-  }, [])
+    try {
+      const fmt = format === 'pdf' ? 'pdf' : 'html'
+      const result = await exportStudy(studyId, fmt)
+      const exportUrl = result && typeof result === 'object' && 'url' in result && typeof (result as { url: string }).url === 'string'
+        ? (result as { url: string }).url
+        : undefined
+      if (exportUrl) {
+        window.open(exportUrl, '_blank')
+        toast.success(`Exported as ${format.toUpperCase()}`)
+      } else if (format === 'json') {
+        const blob = new Blob(
+          [JSON.stringify({ blocks: state.aiBlocks, topicContext: state.topicContext }, null, 2)],
+          { type: 'application/json' }
+        )
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `study-${studyId}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+        toast.success('Exported as JSON')
+      } else {
+        toast.info('Export prepared')
+      }
+    } catch (err) {
+      toast.error((err as Error).message)
+    } finally {
+      dispatch({ type: 'SET_EXPORTING', value: false })
+    }
+  }, [state.studyId, state.aiBlocks, state.topicContext])
 
-  const handleRequestRevision = useCallback((_comments: string) => {
-    toast.info('Revision requested. Regenerating...')
-    simulateStreaming()
-  }, [simulateStreaming])
+  const handleRequestRevision = useCallback(async (comments: string) => {
+    const studyId = state.studyId
+    if (!studyId) {
+      toast.error('No study to revise')
+      return
+    }
+    try {
+      const result = await reviseStudy(studyId, comments)
+      if (result?.blocks) {
+        dispatch({ type: 'SET_BLOCKS', value: result.blocks })
+        toast.success('Revision applied')
+      } else {
+        toast.info('Revision requested. Regenerating...')
+        handleStartGeneration()
+      }
+    } catch (err) {
+      toast.error((err as Error).message)
+    }
+  }, [state.studyId, handleStartGeneration])
 
   const handleOcrStatusChange = useCallback(
     (materialId: string, status: import('@/types/study-wizard').OCRStatus) => {
@@ -314,13 +478,27 @@ export function StudyWizardContainer() {
       {state.step > 0 && (
         <div className="border-b border-border bg-card px-4 py-3">
           <div className="flex items-center justify-between gap-4">
-            <StepperNav
+            <div className="flex items-center gap-3">
+              <StepperNav
               steps={STEPS ?? []}
               currentStep={state.step}
               onStepClick={handleStepClick}
               disabled={state.isGenerating}
             />
-            <Progress value={progress} className="hidden w-24 md:block" aria-label="Progress" />
+              {(isStep5 || isStep6) && (
+                <StatusBadge
+                  variant={
+                    state.isGenerating ? 'streaming' : state.generationError ? 'error' : (state.aiBlocks?.length ?? 0) > 0 ? 'complete' : 'idle'
+                  }
+                  progressPct={state.generationProgress}
+                  stage={state.isGenerating ? 'Generating...' : undefined}
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <SettingsDrawer quota={{ usedCount: 0, limit: 10, windowEnd: new Date().toISOString() }} />
+              <Progress value={progress} className="hidden w-24 md:block" aria-label="Progress" />
+            </div>
           </div>
         </div>
       )}
@@ -351,7 +529,7 @@ export function StudyWizardContainer() {
 
             {state.step === 3 && (
               <ChildStyleSelector
-                children={children}
+                children={displayChildren}
                 selectedChildId={state.selectedChildId}
                 learningStyle={state.learningStyle}
                 onChildSelect={(id) => dispatch({ type: 'SET_CHILD', id })}
@@ -390,6 +568,31 @@ export function StudyWizardContainer() {
                   generationOptions={state.generationOptions}
                   blocks={state.aiBlocks}
                 />
+                <LayoutPreview
+                  blocks={state.aiBlocks}
+                  topic={state.topicContext?.topic}
+                  onExport={(fmt) => {
+                    if (fmt === 'pdf' || fmt === 'html') {
+                      const studyId = state.studyId
+                      if (studyId) {
+                        dispatch({ type: 'SET_EXPORTING', value: true })
+                        exportStudy(studyId, fmt)
+                          .then((r) => {
+                            const u = r && typeof r === 'object' && 'url' in r && typeof (r as { url: string }).url === 'string'
+                              ? (r as { url: string }).url
+                              : undefined
+                            if (u) window.open(u, '_blank')
+                            toast.success(`Exported as ${fmt.toUpperCase()}`)
+                          })
+                          .catch((e) => toast.error((e as Error).message))
+                          .finally(() => dispatch({ type: 'SET_EXPORTING', value: false }))
+                      } else {
+                        toast.error('No study to export')
+                      }
+                    }
+                  }}
+                  isExporting={state.isExporting}
+                />
                 <ReviewEditPanel
                   blocks={state.aiBlocks}
                   onBlocksChange={(v) => dispatch({ type: 'SET_BLOCKS', value: v })}
@@ -407,14 +610,34 @@ export function StudyWizardContainer() {
         </div>
 
         {state.step >= 1 && (
-          <SidebarPanel
-            topicContext={state.topicContext}
-            childProfile={selectedChild}
-            learningStyle={state.learningStyle}
-            generationOptions={state.generationOptions}
-            materials={state.materials}
-            versions={state.versions}
-          />
+          <aside className="hidden w-full shrink-0 border-l border-border bg-card md:block lg:w-80">
+            <div className="sticky top-0 max-h-[calc(100vh-4rem)] overflow-y-auto p-4 space-y-4">
+              <SidebarPanel
+                topicContext={state.topicContext}
+                childProfile={selectedChild}
+                learningStyle={state.learningStyle}
+                generationOptions={state.generationOptions}
+                materials={state.materials}
+                versions={state.versions}
+              />
+              {state.studyId && (
+                <VersioningPanel
+                  versions={state.versionsMetadata ?? []}
+                  onRestore={async (versionId) => {
+                    const { fetchVersion } = await import('@/api/studies')
+                    const detail = await fetchVersion(state.studyId!, versionId)
+                    const blocks = detail?.contentSnapshot?.blocks
+                    if (Array.isArray(blocks) && blocks.length > 0) {
+                      dispatch({ type: 'SET_BLOCKS', value: blocks })
+                      toast.success('Version restored')
+                    } else {
+                      toast.error('Could not restore version')
+                    }
+                  }}
+                />
+              )}
+            </div>
+          </aside>
         )}
       </div>
 
