@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Grid3X3, List, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -59,12 +59,15 @@ function setStoredView(view: 'grid' | 'list') {
 }
 
 export function StudyLibraryPage() {
+  const [searchParams] = useSearchParams()
+  const initialSearch = (searchParams.get('q') ?? '').trim()
+
   const [view, setView] = useState<'grid' | 'list'>(getStoredView)
   const [folderTreeCollapsed, setFolderTreeCollapsed] = useState(false)
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [filters, setFilters] = useState<StudyLibraryFilters>({
-    search: '',
+    search: initialSearch,
     folderId: undefined,
   })
   const [isExporting, setIsExporting] = useState(false)

@@ -27,6 +27,7 @@ import { AdminModerationPage } from '@/pages/admin-moderation'
 import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
+import { SearchRedirectPage } from '@/pages/search-redirect'
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
@@ -72,6 +73,7 @@ export const router = createBrowserRouter([
       { path: 'health', element: <AdminHealthPage /> },
     ],
   },
+  { path: '/search', element: <SearchRedirectPage /> },
   { path: '/404', element: <NotFoundPage /> },
   { path: '/500', element: <ErrorPage /> },
   { path: '*', element: <NotFoundPage /> },
