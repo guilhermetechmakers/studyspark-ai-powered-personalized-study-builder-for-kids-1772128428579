@@ -12,13 +12,29 @@ import type { LoginFormData } from './email-auth-form'
 import type { SignUpFormData } from './signup-form'
 import type { ChildProfile } from '@/types/auth'
 import { toast } from 'sonner'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
 
 export function AuthContainer() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const isSignup = location.pathname === '/signup'
+
+  const getRedirectPath = (): string => {
+    const fromState = (location.state as { from?: { pathname: string } } | null)?.from?.pathname
+    if (fromState && fromState !== '/login' && fromState !== '/signup') return fromState
+    const redirectParam = searchParams.get('redirect')
+    if (redirectParam) {
+      try {
+        const decoded = decodeURIComponent(redirectParam)
+        if (decoded.startsWith('/') && decoded !== '/login' && decoded !== '/signup') return decoded
+      } catch {
+        // ignore
+      }
+    }
+    return '/dashboard'
+  }
 
   const [isLoading, setIsLoading] = useState(false)
   const [alert, setAlert] = useState<{ type: 'error' | 'success'; message: string } | null>(null)
@@ -33,7 +49,7 @@ export function AuthContainer() {
     try {
       await login(data.email, data.password)
       toast.success('Welcome back!')
-      navigate('/dashboard')
+      navigate(getRedirectPath(), { replace: true })
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Invalid email or password'
       setAlert({ type: 'error', message: msg })
@@ -58,7 +74,7 @@ export function AuthContainer() {
         setOnboardingOpen(true)
       } else {
         toast.success('Account created!')
-        navigate('/dashboard')
+        navigate(getRedirectPath(), { replace: true })
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.'

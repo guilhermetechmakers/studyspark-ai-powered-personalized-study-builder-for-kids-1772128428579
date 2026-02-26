@@ -1,7 +1,8 @@
 /**
- * Auth API - Login, signup, OAuth, password reset.
+ * Auth API - Login, signup, OAuth, password reset, logout.
  * Uses Supabase Auth when configured; falls back to mock for development.
  * All responses validated for shape; null-safe.
+ * Audit logging via Edge Function when Supabase is configured.
  */
 
 import { supabase } from '@/lib/supabase'
@@ -11,6 +12,30 @@ import { asArray } from '@/lib/data-guard'
 const hasSupabase = Boolean(
   import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
 )
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? ''
+
+/** Log auth event to audit_logs via Edge Function. Fire-and-forget; never throws. */
+async function logAuthEvent(
+  accessToken: string | undefined,
+  action: string,
+  success: boolean,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  if (!hasSupabase || !supabaseUrl || !accessToken) return
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/log-auth-event`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ action, success, metadata: metadata ?? {} }),
+    })
+  } catch {
+    // Fire-and-forget
+  }
+}
 
 function toUser(user: { id: string; email?: string; user_metadata?: { name?: string }; created_at?: string }): User {
   const now = new Date().toISOString()
@@ -27,9 +52,14 @@ function toUser(user: { id: string; email?: string; user_metadata?: { name?: str
 export async function login(email: string, password: string): Promise<AuthResponse> {
   if (hasSupabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw new Error(error.message)
+    if (error) {
+      await logAuthEvent(undefined, 'login', false, { email: email?.slice(0, 3) + '***' })
+      throw new Error(error.message)
+    }
     const user = data?.user
+    const session = data?.session
     if (!user) throw new Error('Authentication failed')
+    await logAuthEvent(session?.access_token, 'login', true, { provider: 'email' })
     return {
       user: toUser(user),
       onboardingRequired: false,
@@ -57,14 +87,18 @@ export async function signup(name: string, email: string, password: string): Pro
       password,
       options: { data: { name } },
     })
-    if (error) throw new Error(error.message)
+    if (error) {
+      await logAuthEvent(undefined, 'signup', false, { email: email?.slice(0, 3) + '***' })
+      throw new Error(error.message)
+    }
     const user = data?.user
+    const session = data?.session
     if (!user) throw new Error('Signup failed')
-    const needsEmailVerification = !data?.session
+    await logAuthEvent(session?.access_token, 'signup', true, { needsEmailVerification: !session })
     return {
       user: toUser(user),
-      onboardingRequired: !needsEmailVerification,
-      needsEmailVerification,
+      onboardingRequired: !!session,
+      needsEmailVerification: !session,
     }
   }
   // Mock for development
@@ -84,13 +118,45 @@ export async function signup(name: string, email: string, password: string): Pro
 
 export async function signInWithOAuth(provider: 'google' | 'apple' | 'facebook'): Promise<void> {
   if (hasSupabase) {
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : undefined
     const { error } = await supabase.auth.signInWithOAuth({
       provider: provider === 'facebook' ? 'facebook' : provider,
+      options: { redirectTo },
     })
     if (error) throw new Error(error.message)
     return
   }
   throw new Error(`${provider} sign-in is not configured. Please set up Supabase.`)
+}
+
+/** Link an OAuth provider to the current account. User must be signed in. */
+export async function linkOAuthProvider(provider: 'google' | 'apple' | 'facebook'): Promise<void> {
+  if (hasSupabase) {
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback?returnTo=/dashboard/settings`
+        : undefined
+    const { error } = await supabase.auth.linkIdentity({
+      provider: provider === 'facebook' ? 'facebook' : provider,
+      options: { redirectTo },
+    })
+    if (error) throw new Error(error.message)
+    return
+  }
+  throw new Error(`${provider} link is not configured.`)
+}
+
+/** Get linked OAuth providers for the current user. */
+export async function getLinkedProviders(): Promise<string[]> {
+  if (hasSupabase) {
+    const { data: { user } } = await supabase.auth.getUser()
+    const identities = user?.identities ?? []
+    return identities.map((i) => i.provider ?? '').filter(Boolean)
+  }
+  return []
 }
 
 export async function requestPasswordReset(email: string): Promise<{ success: boolean }> {
@@ -151,6 +217,14 @@ export async function postResendVerification(email: string): Promise<ResendVerif
   }
   await new Promise((r) => setTimeout(r, 500))
   return { success: true, message: 'Verification email sent' }
+}
+
+export async function signOut(): Promise<void> {
+  if (hasSupabase) {
+    const { data: { session } } = await supabase.auth.getSession()
+    await logAuthEvent(session?.access_token, 'logout', true)
+    await supabase.auth.signOut()
+  }
 }
 
 export async function getVerificationStatus(): Promise<VerificationStatusResponse> {

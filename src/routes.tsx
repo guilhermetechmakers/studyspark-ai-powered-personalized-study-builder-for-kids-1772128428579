@@ -3,6 +3,7 @@ import { LandingPage } from '@/pages/landing'
 import { LoginPage } from '@/pages/login'
 import { VerifyEmailPage } from '@/pages/verify-email'
 import { PasswordResetPage } from '@/pages/password-reset'
+import { AuthCallbackPage } from '@/pages/auth-callback'
 import { DashboardOverview } from '@/pages/dashboard-overview'
 import { StudyLibraryPage } from '@/pages/study-library'
 import { CreateStudyWizard } from '@/pages/create-study-wizard'
@@ -28,12 +29,14 @@ import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
 import { SearchRedirectPage } from '@/pages/search-redirect'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <LoginPage /> },
   { path: '/verify-email', element: <VerifyEmailPage /> },
+  { path: '/auth/callback', element: <AuthCallbackPage /> },
   { path: '/forgot-password', element: <PasswordResetPage /> },
   { path: '/password-reset', element: <PasswordResetPage /> },
   { path: '/help', element: <AboutHelpPage /> },
@@ -48,7 +51,11 @@ export const router = createBrowserRouter([
   { path: '/cookie-policy', element: <CookiePolicyPage /> },
   {
     path: '/dashboard',
-    element: <DashboardLayout />,
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <DashboardOverview /> },
       { path: 'studies', element: <StudyLibraryPage /> },
@@ -63,7 +70,11 @@ export const router = createBrowserRouter([
   { path: '/study/:id/play', element: <StudyViewerPage /> },
   {
     path: '/admin',
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <AdminOverviewPage /> },
       { path: 'users', element: <AdminUsersPage /> },

@@ -5,6 +5,22 @@ export interface ApiError {
   code?: string
 }
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  try {
+    const { supabase } = await import('@/lib/supabase')
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`
+    }
+  } catch {
+    // ignore
+  }
+  return headers
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error: ApiError = {
@@ -28,64 +44,54 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export async function apiGet<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers = await getAuthHeaders()
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers: { ...headers, ...options?.headers },
   })
   return handleResponse<T>(res)
 }
 
 export async function apiPost<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+  const headers = await getAuthHeaders()
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers: { ...headers, ...options?.headers },
     body: body ? JSON.stringify(body) : undefined,
   })
   return handleResponse<T>(res)
 }
 
 export async function apiPatch<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+  const headers = await getAuthHeaders()
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers: { ...headers, ...options?.headers },
     body: body ? JSON.stringify(body) : undefined,
   })
   return handleResponse<T>(res)
 }
 
 export async function apiPut<T>(path: string, body?: unknown, options?: RequestInit): Promise<T> {
+  const headers = await getAuthHeaders()
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers: { ...headers, ...options?.headers },
     body: body ? JSON.stringify(body) : undefined,
   })
   return handleResponse<T>(res)
 }
 
 export async function apiDelete<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers = await getAuthHeaders()
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    headers: { ...headers, ...options?.headers },
   })
   return handleResponse<T>(res)
 }

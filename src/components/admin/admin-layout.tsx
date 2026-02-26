@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useAuthContext } from '@/contexts/auth-context'
+import { toast } from 'sonner'
 import {
   Users,
   ShieldCheck,
@@ -37,6 +39,24 @@ export function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const { user, signOut } = useAuthContext()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      toast.success('Signed out successfully')
+      navigate('/login', { replace: true })
+    } catch {
+      toast.error('Failed to sign out')
+    }
+  }
+
+  const initials = user?.name
+    ?.split(/\s+/)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() ?? 'A'
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -127,7 +147,7 @@ export function AdminLayout() {
                 >
                   <Avatar className="h-9 w-9">
                     <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                      A
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -143,7 +163,7 @@ export function AdminLayout() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={() => navigate('/login')}
+                  onClick={handleSignOut}
                 >
                   <LogOut className="h-4 w-4" />
                   Log out

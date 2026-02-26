@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
+import { useAuthContext } from '@/contexts/auth-context'
 import {
   fetchParent,
   updateParent,
@@ -62,6 +63,7 @@ const MOCK_INTEGRATIONS: Integration[] = [
 ]
 
 export function useSettingsData() {
+  const { user } = useAuthContext()
   const [parent, setParent] = useState<ParentAccount | null>(null)
   const [profiles, setProfiles] = useState<ChildProfile[]>([])
   const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS)
@@ -95,7 +97,17 @@ export function useSettingsData() {
         fetchDataExportRequests(),
       ])
 
-      setParent(parentRes ?? MOCK_PARENT)
+      setParent(
+        parentRes ??
+          (user
+            ? {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                profileCompletion: 75,
+              }
+            : MOCK_PARENT)
+      )
       setProfiles(
         Array.isArray(profilesRes) && profilesRes.length > 0
           ? profilesRes
@@ -110,7 +122,16 @@ export function useSettingsData() {
       setPrivacy(privacyRes ?? DEFAULT_PRIVACY_SETTINGS)
       setExportRequests(Array.isArray(exportsRes) ? exportsRes : [])
     } catch {
-      setParent(MOCK_PARENT)
+      setParent(
+        user
+          ? {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              profileCompletion: 75,
+            }
+          : MOCK_PARENT
+      )
       setProfiles(MOCK_CHILDREN)
       setNotifications(DEFAULT_NOTIFICATION_SETTINGS)
       setIntegrations(MOCK_INTEGRATIONS)
@@ -121,7 +142,7 @@ export function useSettingsData() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
     loadAll()

@@ -6,6 +6,7 @@ import {
   IntegrationsPanel,
   BillingPanel,
   PrivacyPanel,
+  AccountSecurityPanel,
   SettingsSkeleton,
 } from '@/components/settings'
 import { useSettingsData } from '@/hooks/use-settings-data'
@@ -59,7 +60,16 @@ export function SettingsPageContainer() {
         isLoading={isLoading}
       />
 
-      <Accordion type="multiple" defaultValue={['children', 'notifications', 'integrations', 'billing', 'privacy']} className="space-y-4">
+      <Accordion type="multiple" defaultValue={['account', 'children', 'notifications', 'integrations', 'billing', 'privacy']} className="space-y-4">
+        <AccordionItem value="account" className="rounded-2xl border-2 border-border/60 bg-card">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-border/60">
+            <span className="text-lg font-semibold">Account & security</span>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6 pt-0">
+            <AccountSecurityPanel />
+          </AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="children" className="rounded-2xl border-2 border-border/60 bg-card">
           <AccordionTrigger className="px-6 py-4 hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-border/60">
             <span className="text-lg font-semibold">Child profiles</span>

@@ -1,5 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, Bell, User, Settings, LogOut, Plus, Shield } from 'lucide-react'
+import { useAuthContext } from '@/contexts/auth-context'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -14,6 +16,24 @@ import {
 
 export function DashboardHeader() {
   const navigate = useNavigate()
+  const { user, signOut } = useAuthContext()
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      toast.success('Signed out successfully')
+      navigate('/login', { replace: true })
+    } catch {
+      toast.error('Failed to sign out')
+    }
+  }
+
+  const initials = user?.name
+    ?.split(/\s+/)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() ?? 'P'
 
   return (
     <header
@@ -52,7 +72,7 @@ export function DashboardHeader() {
             <Button variant="ghost" size="icon" className="rounded-full" aria-label="Profile menu">
               <Avatar className="h-9 w-9">
                 <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                  P
+                  {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -81,7 +101,7 @@ export function DashboardHeader() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
-              onClick={() => navigate('/login')}
+              onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
               Log out

@@ -6,12 +6,15 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { PasswordResetLink } from './password-reset-link'
 import { PasswordStrengthMeter } from './password-strength-meter'
+import { getRememberMe, setRememberMe } from '@/lib/supabase'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean().optional(),
 })
 
 export type LoginFormData = z.infer<typeof loginSchema>
@@ -35,13 +38,16 @@ export function EmailAuthForm({
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', rememberMe: getRememberMe() },
   })
 
   const password = form.watch('password') ?? ''
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
+      if (mode === 'login') {
+        setRememberMe(data.rememberMe ?? true)
+      }
       await onSubmit(data)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong'
@@ -106,6 +112,24 @@ export function EmailAuthForm({
           </p>
         )}
       </div>
+      {mode === 'login' && (
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="auth-remember"
+            checked={form.watch('rememberMe') ?? true}
+            onCheckedChange={(v) => form.setValue('rememberMe', v === true)}
+            aria-describedby="auth-remember-desc"
+            className="rounded"
+          />
+          <Label
+            htmlFor="auth-remember"
+            id="auth-remember-desc"
+            className="text-sm font-normal cursor-pointer"
+          >
+            Remember me
+          </Label>
+        </div>
+      )}
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : mode === 'login' ? 'Log in' : 'Create account'}
       </Button>

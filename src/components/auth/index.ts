@@ -1,4 +1,5 @@
 export { AuthContainer } from './auth-container'
+export { ProtectedRoute } from './protected-route'
 export { AlertBar } from './alert-bar'
 export { EmailAuthForm } from './email-auth-form'
 export { SignUpForm } from './signup-form'

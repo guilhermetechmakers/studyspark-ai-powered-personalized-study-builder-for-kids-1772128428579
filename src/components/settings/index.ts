@@ -1,5 +1,7 @@
 export { SettingsPageContainer } from './settings-page-container'
 export { ProfileHeader } from './profile-header'
+export { AccountSecurityPanel } from './account-security-panel'
+export { SessionsPanel } from './sessions-panel'
 export { ChildProfilesManager } from './child-profiles-manager'
 export { ChildProfileCard } from './child-profile-card'
 export { NotificationsPanel } from './notifications-panel'

@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAuthContextOptional } from '@/contexts/auth-context'
+
 export function LandingHeader() {
+  const auth = useAuthContextOptional()
+  const isAuthenticated = auth?.isAuthenticated ?? false
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -44,12 +49,25 @@ export function LandingHeader() {
           </Link>
         </nav>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" asChild>
-            <Link to="/login">Log in</Link>
-          </Button>
-          <Button variant="default" asChild>
-            <Link to="/signup">Sign Up Free</Link>
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </Button>
+              <Button variant="default" asChild>
+                <Link to="/dashboard/settings">Settings</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/login">Log in</Link>
+              </Button>
+              <Button variant="default" asChild>
+                <Link to="/signup">Sign Up Free</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
