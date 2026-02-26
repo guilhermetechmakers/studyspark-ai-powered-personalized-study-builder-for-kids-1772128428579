@@ -16,8 +16,11 @@ export interface StudyGridProps {
   onShare?: (id: string) => void
   onDelete?: (id: string) => void
   onStarToggle?: (id: string, starred: boolean) => void
+  onManageTags?: (id: string) => void
+  onViewAudit?: (id: string, title: string) => void
   onDragStart?: (id: string) => void
   onDragEnd?: () => void
+  allTags?: { id: string; name: string; color?: string }[]
   className?: string
 }
 
@@ -31,8 +34,11 @@ export function StudyGrid({
   onShare,
   onDelete,
   onStarToggle,
+  onManageTags,
+  onViewAudit,
   onDragStart,
   onDragEnd,
+  allTags = [],
   className,
 }: StudyGridProps) {
   const list = studies ?? []
@@ -59,8 +65,11 @@ export function StudyGrid({
           onShare={onShare}
           onDelete={onDelete}
           onStarToggle={onStarToggle}
+          onManageTags={onManageTags}
+          onViewAudit={onViewAudit}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
+          allTags={allTags}
         />
       ))}
     </div>

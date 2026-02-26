@@ -326,61 +326,324 @@ All dashboard pages should be nested inside the dashboard layout, not separate r
 
 ## User Design Requirements
 
-- Maintain the playful, welcoming, child-friendly aesthetic with rounded UI, soft gradients, and friendly iconography
-- Ensure clarity and accessibility; high-contrast text on colored surfaces; semantic structure with proper headings
-- Use micro-interactions: hover elevations, subtle shadows, and smooth collapses
-- Use pill-shaped toggles, rounded inputs, and large primary buttons for actions
-- Provide visual progress indicators and helpful tooltips where appropriate
-- Ensure responsive, mobile-first layout with a clean transition to larger screens
+# Library Management & Organization
 
-Visual Style
+## Overview
+Develop a robust Library Management & Organization system for StudySpark that enables saving, organizing, duplicating, tagging, searching, and bulk-managing study sets and folders. This feature should support multi-user collaboration with ownership, sharing permissions, audit trails, and full-text search with filters. It must include client-side drag-and-drop for folders, server-side synchronization, transactional bulk operations, and a comprehensive UI that aligns with StudySpark’s playful, parent- and child-friendly design language.
 
-Color Palette:
-- Primary: Soft pastel peach (#FFE7CF to #FFD4A6 gradients), muted lavender (#A9A6F9), bright tangerine (#FFAD5A)
-- Accent: Deep violet (#5B57A5), light yellow (#FFF5A5), soft coral (#FFB085), pale gray (#F8F8FB)
-- Backgrounds: Off-white (#FFF9F2), very light peach (#FFF3E6) with subtle gradients
-- Text: Dark gray (#232323) for headings, medium gray (#6C6C6C) for body; white (#FFFFFF) on colored backgrounds
-- Contrast: Black (#17171C) for icons/buttons
-- Relationships: Pastels with bold accents; gradients for cards/backgrounds; saturated accents for data highlights
+## Components to Build
+1) Data Model Layer (Schema)
+- Studies (study sets)
+  - id (UUID)
+  - owner_id (FK to Users)
+  - title (string)
+  - description (string, optional)
+  - content (JSON or text fragments)
+  - created_at, updated_at
+  - is_public (boolean) / sharing settings
+  - folder_id (FK to Folders, nullable)
+  - tags (array or separate Tag relation)
+  - version (integer) for audit
+- Folders
+  - id (UUID)
+  - owner_id
+  - name (string)
+  - parent_folder_id (FK to Folders, nullable)
+  - position_order (integer) for sorting
+  - created_at, updated_at
+  - is_deleted (soft delete flag)
+- Tags
+  - id (UUID)
+  - name (string)
+  - color (string, optional)
+  - owner_id
+  - created_at
+- StudyTags (join table)
+  - study_id
+  - tag_id
+- Ownership & Sharing
+  - StudyPermissions
+    - id
+    - study_id
+    - user_id
+    - role (viewer/editor/owner)
+    - can_share (bool)
+  - FolderPermissions (optional)
+- AuditLogs
+  - id
+  - resource_type (e.g., 'study', 'folder')
+  - resource_id
+  - action (created, updated, duplicated, moved, deleted, shared, etc.)
+  - performed_by (user_id)
+  - timestamp
+  - details (JSON)
+- Search index (external or nested)
+  - For full-text search: title, description, content, tags
 
-Typography & Layout:
-- Font family: Rounded geometric sans-serif (Inter, Nunito, SF Pro Rounded)
-- Weights: 400 body, 500 labels/subheads, 700 headings
-- Hierarchy: Large headings, section titles, concise body text; bold numerals
-- Spacing: 16–24px padding, 8–12px gaps; generous whitespace
-- Alignment: Left text; centered data points; evenly distributed grids
-- Treatments: Colored/highlighted text for emphasis; rounded number badges; pill-shaped labels
+2) API Surface
+- Authenticated endpoints (JWT/session-based as per StudySpark)
+- Endpoints for Studies
+  - POST /api/studies (create)
+  - GET /api/studies?folderId=&tag=&q=&public=&owner=&limit=&offset=
+  - GET /api/studies/{id}
+  - PUT /api/studies/{id} (update)
+  - PATCH /api/studies/{id} (partial update)
+  - DELETE /api/studies/{id} (soft delete)
+  - POST /api/studies/{id}/duplicate (duplicate study)
+  - POST /api/studies/bulk (bulk operations: move, tag, delete, duplicate)
+  - POST /api/studies/bulk/move (move multiple studies to a folder)
+  - POST /api/studies/{id}/share (update sharing)
+  - POST /api/studies/{id}/tags (add/remove tags)
+- Endpoints for Folders
+  - POST /api/folders (create)
+  - GET /api/folders?parentId=&owner=
+  - GET /api/folders/{id}
+  - PUT /api/folders/{id} (rename/move)
+  - DELETE /api/folders/{id} (soft delete)
+  - POST /api/folders/bulk (bulk move/rename)
+  - POST /api/folders/{id}/move (move child folders/studies)
+- Endpoints for Tags
+  - GET /api/tags
+  - POST /api/tags
+  - DELETE /api/tags/{id}
+- Search
+  - GET /api/search?query=&filters[folder_id]=&filters[tag]=&filters[owner]=&limit=&offset=
+- Audit
+  - GET /api/audit?resource_type=&resource_id=&action=&limit=&offset=
+- Webhooks/Subscriptions (optional)
+  - Notify UI on changes for real-time updates
 
-Key Design Elements
-Card Design:
-- 20–28px border radius; soft drop shadows; light borders or none
-- Backgrounds: Pastel colors or gentle gradients with decorative illustrations
-- Hover/Active: Elevated shadow, glow or stronger border on active
-- Visual hierarchy: Headings/top actions; data/icons below; clear separation
+3) Frontend Components and Pages
+- Library Dashboard Page (page_p009)
+  - Left sidebar: Folder tree with drag-and-drop reorganization, search filter chips for tags, and bulk action controls
+  - Main area: Grid/list view of Studies and Folders with:
+    - Card design: study cards with title, tags, owner, last edited, and quick actions (duplicate, move, delete, share)
+    - Folder cards for navigation
+  - Bulk actions toolbar: select multiple studies/folders; apply move, tag, duplicate, delete
+  - Drag-and-drop: draggable studies into folders; folders within a draggable tree
+  - Search bar with filters for tags, folder, owner, and text search
+  - Quick create: add a new study with minimal inputs
+- Study Editor/List View (page_p005)
+  - Study list with inline quick actions: edit, duplicate, tag management, bulk apply
+  - Tag management modal: add/remove tags with color chips
+  - Bulk editor: apply tags or move to folder, apply templates, or duplicate
+- Components
+  - Drag-and-drop containers (folders and studies)
+  - Tag pills with color
+  - Badge filters and subject filters
+  - Empty-state illustrations and guided prompts
+  - Audit log viewer modal or panel
+  - Preview drawer for study content
+- Shared UI
+  - Modals for create/edit
+  - Confirmation dialogs for destructive actions
+  - Toasts/notifications for success/failure
+  - Loading skeletons for data fetches
 
-Navigation:
-- Bottom nav: Floating pill with prominent icons; active state via colored background or underline
-- Top section: Avatar/profile and progress bar; separation from content
-- Collapsible elements: Smooth expand/collapse with chevrons
+4) Integration & State Management
+- State: use React with hooks; maintain arrays for studies, folders, and tags with correct defaults
+- Data handling safety
+  - Use data ?? [] for API results
+  - Validate arrays before map/filter/reduce
+  - Initialize state with useState<Type[]>([])
+  - Validate API responses with Array.isArray(...)
+  - Use optional chaining for nested data
+- Drag-and-drop: React DnD or modern HTML5 drag-and-drop with optimistic UI updates; server-side sync on drop completion
+- Bulk operations: transactional on server; client to batch requests and revert on failure
+- Real-time: Polling or WebSocket for updates to share status and audit logs
+- Accessibility: aria-labels, keyboard navigability, proper focus management
 
-Data Visualization:
-- Charts: Rounded bars with pastel fills; minimal gridlines
-- Data callouts: Large numerals; rounded category badges
-- Patterns: Background icons or illustrations to contextualize data
+5) Backend Implementation Details
+- Database Schema (PostgreSQL recommended)
+  - users(id, name, email, etc.)
+  - studies(id, owner_id, title, description, content, folder_id, is_public, created_at, updated_at, version)
+  - folders(id, owner_id, name, parent_folder_id, position_order, created_at, updated_at, is_deleted)
+  - tags(id, owner_id, name, color, created_at)
+  - study_tags(study_id, tag_id)
+  - study_permissions(id, study_id, user_id, role, can_share)
+  - audit_logs(id, resource_type, resource_id, action, performed_by, timestamp, details)
+  - search_index(index_name, object_id, content) or use PostgreSQL full-text search with tsvector
+- Full-Text Search
+  - Implement FTS on studies.title, studies.description, studies.content, tags.name
+  - Support filters: folder_id, owner_id, tag_ids, is_public
+  - Use either Elasticsearch or Postgres FTS with trigram/GIN indexes
+- Transactions & Bulk Operations
+  - Bulk endpoints wrap in SQL transactions
+  - If any operation fails, rollback all changes
+  - Logging of each action to audit_logs
+- API-layer details
+  - Input validation with schema validation (Zod/Yup)
+  - Guards for ownership and permissions
+  - Consistent response shapes: { data, error, message, count }
+- Security
+  - JWT or session-based auth middleware
+  - Resource-based authorization checks
+  - Rate limiting on bulk endpoints
+- Data Integrity
+  - Maintain referential integrity on folder moves (update child references)
+  - Soft delete for folders/studies with audit trail
 
-Interactive Elements:
-- Buttons: Rounded pills; bold colors; shadow on hover; filled primary, outlined secondary
-- Forms: Rounded inputs; clear labels; icon adornments
-- Micro-interactions: Smooth transitions; subtle scaling/shadow on tap/hover; progress bars
+6) Data Validation & Safety Rules (Runtime Safety)
+- Supabase-like patterns or equivalent:
+  - const items = data ?? []
+  - (items ?? []).map(...) and Array.isArray(items) ? items.map(...) : []
+  - useState<Type[]>([]) for array state
+  - const list = Array.isArray(response?.data) ? response.data : []
+  - obj?.prop?.nested
+  - const { items = [], count = 0 } = response ?? {}
+- Apply guards everywhere: never use .map/.reduce on potentially null values
+- Ensure null/undefined checks on all API results before rendering or processing
+- Initialize all form fields with safe defaults
+- Validate required fields server-side and client-side
 
-Design Philosophy
-- Playful, welcoming, child-friendly aesthetic with soft pastels, rounded shapes, friendly icons
-- Clarity, accessibility, delight; progress-tracking and gamified elements
-- Simple, intuitive navigation; minimalism with warmth and personality
+7) API Endpoints Map (Example)
+- GET /api/studies?folderId=&tag=&q=&limit=&offset=
+- POST /api/studies
+- GET /api/studies/{id}
+- PUT /api/studies/{id}
+- DELETE /api/studies/{id}
+- POST /api/studies/{id}/duplicate
+- POST /api/studies/bulk
+- POST /api/studies/bulk/move
+- POST /api/studies/{id}/tags
+- POST /api/folders
+- GET /api/folders
+- PUT /api/folders/{id}
+- DELETE /api/folders/{id}
+- POST /api/folders/bulk
+- POST /api/folders/{id}/move
+- GET /api/tags
+- POST /api/tags
+- DELETE /api/tags/{id}
+- GET /api/search
+- GET /api/audit
 
----
+8) User Experience Flow
+- Discovery
+  - User opens Library (page_p009) and sees folders in a left pane and studies in the grid
+  - Quick search and tag filters are available
+- Creating & Organizing
+  - User creates a folder, adds a study, and assigns initial tags
+  - Drag a study into a folder; the UI shows the updated path and breadcrumb
+  - Create nested folders through drag-and-drop with visual cues
+- Tagging & Filtering
+  - User adds/removes tags; filter results by tags, folder, owner
+- Bulk Management
+  - User selects multiple studies/folders
+  - Applies bulk actions: move to folder, add tag, duplicate, or delete (soft delete)
+- Editing & Versioning
+  - User edits a study; system increments version; audit log records changes
+  - Duplicating a study creates a new study with copied content and updated metadata
+- Searching
+  - Full-text search supports filters (folder, tag), enabling quick retrieval
+- Audit & Sharing
+  - User can share studies/folders with other users with defined roles
+  - Audit logs show who did what and when
+- Offline/Sync
+  - Client stores a local cache; on re-connect, performs reconciliation with server data
+- Accessibility & Onboarding
+  - Tooltips, accessible labels, keyboard shortcuts
+  - Guided prompts for first-time users to create folders and studies
 
-Generate the complete, detailed prompt now:
+9) Acceptance Criteria
+- Data correctness and safety
+  - All array operations guard against null/undefined; use data ?? [] consistently
+  - useState<Type[]>([]) initialized for all array states
+  - All API responses validated as arrays where expected
+- Functionality
+  - Create, read, update, delete (soft delete) for studies and folders
+  - Drag-and-drop reorganization with server-side sync
+  - Bulk operations succeed transactionally; rollback on failure
+  - Full-text search with filters returns correct results efficiently
+  - Tags can be created, associated, and filtered; tag colors rendered
+  - Audit logs recorded for create/update/delete/duplicate/move actions
+- Security & Permissions
+  - Ownership and sharing permissions enforced on all sensitive actions
+  - Unauthorized actions blocked with clear messages
+- UI/UX
+  - Consistent design language per visual style; responsive layouts
+  - Cards with hover/active states; pill-shaped controls; accessible contrast
+  - Empty states and loading placeholders present
+- Performance
+  - Pagination and lazy loading for large libraries
+  - Debounced search input to prevent excessive queries
+
+10) UI/UX Guidelines (Apply the project's design system)
+- Visual Style
+  - Color Palette: Soft pastel peach, muted lavender, bright tangerine; use accent colors for actions
+  - Backgrounds: Off-white and light peach with gradients
+  - Text: Dark gray headings, medium gray body, white on colored backgrounds
+  - Buttons: Rounded pill-shaped; primary filled in tangerine or violet; secondary outlined
+  - Cards: 20–28px radius, soft shadows, light borders
+  - Badges: Rounded, pill-shaped with pastel backgrounds
+- Typography & Layout
+  - Rounded geometric sans-serif fonts (Inter/Nunito/SF Pro Rounded)
+  - Headings bold (700); labels/subheads medium (500); body 400
+  - Generous whitespace; 16–24px padding; 8–12px gaps
+  - Left-aligned text; centered data; grid layouts with even distribution
+- Key Design Elements
+  - Card-based layout with clear actions at top
+  - Drag-and-drop interactions with visual feedback
+  - Micro-interactions: hover shadows, button glow, subtle motion
+- Navigation
+  - Top bar with user avatar and progress
+  - Bottom navigation for primary sections with pill indicators
+  - Collapsible sections for folders and filters
+- Data Visualization
+  - Simple, pastel charts for analytics (if needed in audit or stats)
+- Interactions
+  - Smooth transitions for movements; animated progress on bulk actions
+- Accessibility
+  - Focus-visible keyboard navigation; alt text for icons; aria-labels on interactive elements
+
+11) Mandatory Coding Standards — Runtime Safety
+- Supabase-like patterns (or equivalent backend)
+  - Use const items = data ?? [] for results
+  - (items ?? []).map(...) and Array.isArray(items) ? items.map(...) : []
+- React state hygiene
+  - const [studies, setStudies] = useState<Study[]>([])
+  - const [folders, setFolders] = useState<Folder[]>([])
+  - Initialize with [] in all array states
+- API validation
+  - const list = Array.isArray(response?.data) ? response.data : []
+- Optional chaining
+  - Use obj?.property?.nested when reading nested API/DB results
+- Destructuring with defaults
+  - const { items = [], count = 0 } = response ?? {}
+- All UI rendering guards
+  - Always guard against null/undefined before rendering mapped lists
+- Error handling
+  - Graceful fallbacks with user-friendly messages and retry options
+
+12) Technology Recommendations
+- Frontend
+  - React with TypeScript
+  - State management: React Query or SWR for data fetching and cache; local component state for UI
+  - Drag-and-drop: React DnD or HTML5 Drag and Drop with accessibility
+  - Styling: CSS-in-JS (styled-components) or CSS Modules to align with design system
+- Backend
+  - Node.js with Express or NestJS (TypeScript)
+  - PostgreSQL as primary DB
+  - Full-text search: PostgreSQL tsvector + GIN index or Elasticsearch
+  - ORM: Prisma or TypeORM
+  - Migrations: Prisma migrate or Knex
+- Security
+  - JWT or session-based authentication
+  - Role-based access control
+- Testing
+  - Unit tests for data models and utilities
+  - Integration tests for API endpoints
+  - E2E tests for drag-and-drop and bulk operations
+
+13) Deliverables
+- Fully documented API spec with request/response schemas
+- Database schema DDL scripts or Prisma schema
+- Frontend components with reusable UI primitives
+- Example data seeding scripts
+- Comprehensive tests: unit, integration, and E2E coverage
+- Visual design tokens aligned with the Design System
+
+Generate the complete, detailed prompt now so an AI development tool can implement the feature end-to-end with robust runtime safety.
 
 ## Implementation Notes
 

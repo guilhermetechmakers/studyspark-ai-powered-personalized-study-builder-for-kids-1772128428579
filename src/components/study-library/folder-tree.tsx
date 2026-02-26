@@ -39,6 +39,7 @@ export interface FolderTreeProps {
   onRenameFolder: (id: string, name: string) => void
   onDeleteFolder: (id: string) => void
   onDropStudy?: (studyId: string, folderId: string | null) => void
+  onMoveFolder?: (folderId: string, newParentId: string | null) => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
   className?: string
@@ -66,6 +67,78 @@ function getChildren(folders: FolderType[], parentId: string): FolderType[] {
     .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
 }
 
+function isDescendant(folders: FolderType[], ancestorId: string, nodeId: string): boolean {
+  const list = folders ?? []
+  let current: FolderType | undefined = list.find((f) => f.id === nodeId)
+  while (current) {
+    if (current.id === ancestorId) return true
+    const parentId = current.parentFolderId ?? null
+    if (!parentId) return false
+    current = list.find((f) => f.id === parentId)
+  }
+  return false
+}
+
+interface RootDropZoneProps {
+  onDropStudy?: (studyId: string, folderId: string | null) => void
+  onMoveFolder?: (folderId: string, newParentId: string | null) => void
+  isActive: boolean
+  onSelect: () => void
+}
+
+function RootDropZone({
+  onDropStudy,
+  onMoveFolder,
+  isActive,
+  onSelect,
+}: RootDropZoneProps) {
+  const [dragOver, setDragOver] = useState(false)
+  const canDrop = onDropStudy || onMoveFolder
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const studyId = e.dataTransfer.getData('study-id')
+    const folderId = e.dataTransfer.getData('folder-id')
+    if (studyId && onDropStudy) {
+      onDropStudy(studyId, null)
+    } else if (folderId && onMoveFolder) {
+      onMoveFolder(folderId, null)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOver(true)
+  }
+
+  const handleDragLeave = () => setDragOver(false)
+
+  return (
+    <div
+      className={cn(
+        'flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition-colors rounded-lg',
+        isActive && 'bg-primary/10 text-primary',
+        !isActive && 'hover:bg-muted',
+        dragOver && canDrop && 'ring-2 ring-primary/50 bg-primary/5'
+      )}
+      onDrop={canDrop ? handleDrop : undefined}
+      onDragOver={canDrop ? handleDragOver : undefined}
+      onDragLeave={canDrop ? handleDragLeave : undefined}
+    >
+      <button
+        type="button"
+        className="flex flex-1 items-center gap-2 text-left"
+        onClick={onSelect}
+      >
+        <FolderOpen className="h-4 w-4" />
+        All Studies
+      </button>
+    </div>
+  )
+}
+
 interface FolderItemProps {
   folder: FolderType
   folders: FolderType[]
@@ -74,6 +147,7 @@ interface FolderItemProps {
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
   onDropStudy?: (studyId: string, folderId: string) => void
+  onMoveFolder?: (folderId: string, newParentId: string | null) => void
   depth: number
 }
 
@@ -85,6 +159,7 @@ function FolderItem({
   onRename,
   onDelete,
   onDropStudy,
+  onMoveFolder,
   depth,
 }: FolderItemProps) {
   const [expanded, setExpanded] = useState(true)
@@ -95,13 +170,19 @@ function FolderItem({
   const children = getChildren(folders, folder.id)
   const hasChildren = children.length > 0
   const isActive = activeFolderId === folder.id
+  const canDrop = onDropStudy || onMoveFolder
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
     const studyId = e.dataTransfer.getData('study-id')
+    const draggedFolderId = e.dataTransfer.getData('folder-id')
     if (studyId && onDropStudy) {
       onDropStudy(studyId, folder.id)
+    } else if (draggedFolderId && onMoveFolder && draggedFolderId !== folder.id) {
+      if (!isDescendant(folders, draggedFolderId, folder.id)) {
+        onMoveFolder(draggedFolderId, folder.id)
+      }
     }
   }
 
@@ -112,6 +193,11 @@ function FolderItem({
   }
 
   const handleDragLeave = () => setDragOver(false)
+
+  const handleFolderDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('folder-id', folder.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
 
   const handleRenameSubmit = () => {
     const trimmed = renameValue?.trim() ?? ''
@@ -131,9 +217,11 @@ function FolderItem({
           dragOver && 'ring-2 ring-primary/50 bg-primary/5'
         )}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
-        onDrop={onDropStudy ? handleDrop : undefined}
-        onDragOver={onDropStudy ? handleDragOver : undefined}
-        onDragLeave={onDropStudy ? handleDragLeave : undefined}
+        draggable={!!onMoveFolder}
+        onDragStart={onMoveFolder ? handleFolderDragStart : undefined}
+        onDrop={canDrop ? handleDrop : undefined}
+        onDragOver={canDrop ? handleDragOver : undefined}
+        onDragLeave={canDrop ? handleDragLeave : undefined}
       >
         <button
           type="button"
@@ -224,6 +312,7 @@ function FolderItem({
               onRename={onRename}
               onDelete={onDelete}
               onDropStudy={onDropStudy}
+              onMoveFolder={onMoveFolder}
               depth={depth + 1}
             />
           ))}
@@ -241,6 +330,7 @@ export function FolderTree({
   onRenameFolder,
   onDeleteFolder,
   onDropStudy,
+  onMoveFolder,
   isCollapsed = false,
   onToggleCollapse,
   className,
@@ -307,17 +397,12 @@ export function FolderTree({
         </div>
       </div>
       <div className="flex-1 overflow-auto py-2">
-        <button
-          type="button"
-          className={cn(
-            'flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition-colors',
-            activeFolderId === null ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-          )}
-          onClick={() => onFolderSelect(null)}
-        >
-          <FolderOpen className="h-4 w-4" />
-          All Studies
-        </button>
+        <RootDropZone
+          onDropStudy={onDropStudy}
+          onMoveFolder={onMoveFolder}
+          isActive={activeFolderId === null}
+          onSelect={() => onFolderSelect(null)}
+        />
         {(rootFolders ?? []).map((f) => (
           <FolderItem
             key={f.id}
@@ -328,6 +413,7 @@ export function FolderTree({
             onRename={onRenameFolder}
             onDelete={onDeleteFolder}
             onDropStudy={onDropStudy}
+            onMoveFolder={onMoveFolder}
             depth={0}
           />
         ))}

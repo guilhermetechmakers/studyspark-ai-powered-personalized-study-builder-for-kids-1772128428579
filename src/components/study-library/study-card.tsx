@@ -13,6 +13,8 @@ import {
   Trash2,
   Star,
   Play,
+  Tag,
+  History,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -37,8 +39,11 @@ export interface StudyCardProps {
   onShare?: (id: string) => void
   onDelete?: (id: string) => void
   onStarToggle?: (id: string, starred: boolean) => void
+  onManageTags?: (id: string) => void
+  onViewAudit?: (id: string, title: string) => void
   onDragStart?: (id: string) => void
   onDragEnd?: () => void
+  allTags?: { id: string; name: string; color?: string }[]
   className?: string
 }
 
@@ -68,11 +73,15 @@ export function StudyCard({
   onShare,
   onDelete,
   onStarToggle,
+  onManageTags,
+  onViewAudit,
   onDragStart,
   onDragEnd,
+  allTags = [],
   className,
 }: StudyCardProps) {
   const tags = study.tags ?? []
+  const tagMap = new Map((allTags ?? []).map((t) => [t.name.toLowerCase(), t]))
   const subject = study.subject ?? ''
   const learningStyle = study.learningStyle ?? ''
   const childName = study.childName ?? ''
@@ -188,14 +197,25 @@ export function StudyCard({
               )}
               {tags.length > 0 && view === 'grid' && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {(tags ?? []).slice(0, 3).map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
-                    >
-                      {t}
-                    </span>
-                  ))}
+                  {(tags ?? []).slice(0, 3).map((t) => {
+                    const tagInfo = tagMap.get(t.toLowerCase())
+                    return (
+                      <span
+                        key={t}
+                        className={cn(
+                          'rounded-full px-2 py-0.5 text-xs font-medium',
+                          !tagInfo?.color && 'bg-muted text-muted-foreground'
+                        )}
+                        style={
+                          tagInfo?.color
+                            ? { backgroundColor: `${tagInfo.color}40`, color: tagInfo.color }
+                            : undefined
+                        }
+                      >
+                        {t}
+                      </span>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -234,6 +254,18 @@ export function StudyCard({
                       Open
                     </Link>
                   </DropdownMenuItem>
+                  {onManageTags && (
+                    <DropdownMenuItem onClick={() => onManageTags(study.id)}>
+                      <Tag className="mr-2 h-4 w-4" />
+                      Manage tags
+                    </DropdownMenuItem>
+                  )}
+                  {onViewAudit && (
+                    <DropdownMenuItem onClick={() => onViewAudit(study.id, study.title ?? '')}>
+                      <History className="mr-2 h-4 w-4" />
+                      View audit log
+                    </DropdownMenuItem>
+                  )}
                   {onDuplicate && (
                     <DropdownMenuItem onClick={() => onDuplicate(study.id)}>
                       <Copy className="mr-2 h-4 w-4" />

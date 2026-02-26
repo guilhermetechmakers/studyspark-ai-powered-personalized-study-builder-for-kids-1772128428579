@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Plus, Grid3X3, List, FolderOpen } from 'lucide-react'
+import { Plus, Grid3X3, List, FolderOpen, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -23,17 +23,30 @@ import {
   FolderTree,
   BulkActionsBar,
   Pagination,
+  TagManagementModal,
+  AuditLogViewer,
+  TagFilterChips,
+  QuickCreateStudyDialog,
 } from '@/components/study-library'
 import {
   useStudyLibrary,
   useStudyLibraryFolders,
   useStudyLibraryFilterOptions,
+  useStudyLibraryTags,
   moveStudiesToFolder,
   duplicateStudy,
   exportStudies,
   shareStudies,
   deleteStudies,
 } from '@/hooks/use-study-library'
+import { moveFolder } from '@/api/study-library'
+import {
+  createTag,
+  setStudyTags,
+  bulkAddTagsToStudies,
+  fetchAuditLogs,
+  createStudyQuick,
+} from '@/api/study-library'
 import type { StudyLibraryFilters } from '@/types/study-library'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -73,6 +86,10 @@ export function StudyLibraryPage() {
   const [isExporting, setIsExporting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [tagModalStudyId, setTagModalStudyId] = useState<string | null>(null)
+  const [auditModalOpen, setAuditModalOpen] = useState(false)
+  const [auditResourceId, setAuditResourceId] = useState<string | null>(null)
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false)
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -105,9 +122,20 @@ export function StudyLibraryPage() {
   } = useStudyLibraryFolders()
 
   const filterOptions = useStudyLibraryFilterOptions()
+  const { tags: allTags, refetch: refetchTags } = useStudyLibraryTags()
 
   const studyList = studies ?? []
   const folderList = folders ?? []
+  const tagList = allTags ?? []
+
+  const handleManageTags = useCallback((id: string) => {
+    setTagModalStudyId(id)
+  }, [])
+
+  const handleViewAudit = useCallback((id: string, _title: string) => {
+    setAuditResourceId(id)
+    setAuditModalOpen(true)
+  }, [])
 
   const handleSelectChange = useCallback((id: string, selected: boolean) => {
     setSelectedIds((prev) => {
@@ -269,6 +297,47 @@ export function StudyLibraryPage() {
     toast.success('Starred (mock - persist via API)')
   }, [])
 
+  const tagModalStudy = tagModalStudyId
+    ? studyList.find((s) => s.id === tagModalStudyId)
+    : null
+  const currentTagIdsForModal: string[] = tagModalStudy
+    ? ((tagModalStudy.tagObjects ?? []).length > 0
+        ? (tagModalStudy.tagObjects ?? []).map((t) => t.id).filter(Boolean)
+        : (tagModalStudy.tags ?? [])
+            .map((tn) =>
+              tagList.find((t) => t.name.toLowerCase() === tn.toLowerCase())?.id
+            )
+            .filter((id): id is string => id != null))
+    : []
+
+  const handleBulkAddTags = useCallback(
+    async (tagIds: string[]) => {
+      const ids = Array.from(selectedIds)
+      if (ids.length === 0 || tagIds.length === 0) return
+      const ok = await bulkAddTagsToStudies(ids, tagIds)
+      if (ok) {
+        toast.success(`Tags added to ${ids.length} studies`)
+        handleClearSelection()
+        refetchStudies()
+      } else {
+        toast.error('Failed to add tags')
+      }
+    },
+    [selectedIds, handleClearSelection, refetchStudies]
+  )
+
+  const handleSaveTags = useCallback(
+    async (studyId: string, tagIds: string[]) => {
+      const ok = await setStudyTags(studyId, tagIds)
+      if (ok) {
+        refetchStudies()
+        refetchTags()
+      }
+      return ok
+    },
+    [refetchStudies, refetchTags]
+  )
+
   const selectedCount = selectedIds.size
 
   return (
@@ -291,6 +360,15 @@ export function StudyLibraryPage() {
             toast.success('Folder deleted')
           }}
           onDropStudy={handleDropStudy}
+          onMoveFolder={async (folderId, newParentId) => {
+            const ok = await moveFolder(folderId, newParentId)
+            if (ok) {
+              toast.success('Folder moved')
+              refetchFolders()
+            } else {
+              toast.error('Failed to move folder')
+            }
+          }}
           isCollapsed={folderTreeCollapsed}
           onToggleCollapse={() => setFolderTreeCollapsed(true)}
         />
@@ -318,12 +396,32 @@ export function StudyLibraryPage() {
                 Organize and manage your study sets
               </p>
             </div>
-            <Button asChild>
-              <Link to="/dashboard/create">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAuditModalOpen(true)}
+                aria-label="View activity log"
+              >
+                <History className="mr-2 h-4 w-4" />
+                Activity
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setQuickCreateOpen(true)}
+                aria-label="Quick create study"
+              >
                 <Plus className="mr-2 h-4 w-4" />
-                Create Study
-              </Link>
-            </Button>
+                Quick create
+              </Button>
+              <Button asChild>
+                <Link to="/dashboard/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Study
+                </Link>
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -352,12 +450,27 @@ export function StudyLibraryPage() {
               </div>
             </div>
 
+            <TagFilterChips
+              tags={tagList}
+              selectedTagIds={filters.tagIds ?? []}
+              onToggle={(tagId) => {
+                const current = filters.tagIds ?? []
+                const next = current.includes(tagId)
+                  ? current.filter((id) => id !== tagId)
+                  : [...current, tagId]
+                setFilters((prev) => ({ ...prev, tagIds: next.length > 0 ? next : undefined }))
+              }}
+              onClearAll={() =>
+                setFilters((prev) => ({ ...prev, tagIds: undefined }))
+              }
+            />
             <FilterPanel
               filters={filters}
               onChange={setFilters}
               children={filterOptions.children}
               subjects={filterOptions.subjects}
               learningStyles={filterOptions.learningStyles}
+              tags={filterOptions.tags}
             />
           </div>
 
@@ -370,8 +483,10 @@ export function StudyLibraryPage() {
               onExport={handleBulkExport}
               onShare={handleBulkShare}
               onMove={handleMoveStudies}
+              onBulkTag={handleBulkAddTags}
               onDelete={handleBulkDelete}
               folders={folderList}
+              tags={tagList}
               isExporting={isExporting}
               isDeleting={isDeleting}
             />
@@ -425,8 +540,9 @@ export function StudyLibraryPage() {
                 onShare={handleShare}
                 onDelete={handleDeleteClick}
                 onStarToggle={handleStarToggle}
-                onDragStart={() => {}}
-                onDragEnd={() => {}}
+                onManageTags={handleManageTags}
+                onViewAudit={handleViewAudit}
+                allTags={tagList}
               />
               <Pagination
                 page={page}
@@ -458,6 +574,38 @@ export function StudyLibraryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TagManagementModal
+        open={!!tagModalStudyId}
+        onOpenChange={(o) => !o && setTagModalStudyId(null)}
+        studyId={tagModalStudyId ?? ''}
+        studyTitle={tagModalStudy?.title ?? tagModalStudy?.id ?? ''}
+        currentTagIds={currentTagIdsForModal}
+        allTags={tagList}
+        onSave={handleSaveTags}
+        onCreateTag={createTag}
+      />
+
+      <AuditLogViewer
+        open={auditModalOpen}
+        onOpenChange={setAuditModalOpen}
+        resourceType={auditResourceId ? 'study' : undefined}
+        resourceId={auditResourceId ?? undefined}
+        fetchLogs={(params) =>
+          fetchAuditLogs(params?.resourceType, params?.resourceId, params?.limit)
+        }
+      />
+
+      <QuickCreateStudyDialog
+        open={quickCreateOpen}
+        onOpenChange={setQuickCreateOpen}
+        onCreate={async (title, folderId) => {
+          const study = await createStudyQuick(title, folderId)
+          return study ? { id: study.id } : null
+        }}
+        folders={folderList}
+        defaultFolderId={activeFolderId}
+      />
     </div>
   )
 }

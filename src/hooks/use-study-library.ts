@@ -16,6 +16,8 @@ import {
   shareStudies,
   deleteStudies,
   fetchTags,
+  createTag,
+  updateStudyTags,
 } from '@/api/study-library'
 import {
   mockStudyLibraryStudies,
@@ -62,6 +64,7 @@ export function useStudyLibrary(filters: StudyLibraryFilters) {
           endDate: filters.endDate || undefined,
           starred: filters.starred,
           folderId: filters.folderId,
+          tagIds: filters.tagIds,
           page,
           pageSize: PAGE_SIZE,
         })
@@ -75,7 +78,7 @@ export function useStudyLibrary(filters: StudyLibraryFilters) {
       const list = Array.isArray(data) ? data : []
 
       if (list.length === 0) {
-        const mockFiltered = filterMockStudies(mockStudyLibraryStudies, filters)
+        const mockFiltered = filterMockStudies(mockStudyLibraryStudies, filters, mockStudyLibraryTags ?? [])
         const start = (page - 1) * PAGE_SIZE
         const paginated = (mockFiltered ?? []).slice(start, start + PAGE_SIZE)
         setStudies(paginated)
@@ -101,6 +104,7 @@ export function useStudyLibrary(filters: StudyLibraryFilters) {
     filters.endDate,
     filters.starred,
     filters.folderId,
+    filters.tagIds,
     page,
     refreshKey,
   ])
@@ -119,9 +123,11 @@ export function useStudyLibrary(filters: StudyLibraryFilters) {
 
 function filterMockStudies(
   items: StudyCardType[],
-  filters: StudyLibraryFilters
+  filters: StudyLibraryFilters,
+  allTags: TagType[] = []
 ): StudyCardType[] {
   const list = items ?? []
+  const tagList = allTags ?? []
   return list.filter((s) => {
     if (filters.search) {
       const q = filters.search.toLowerCase()
@@ -139,6 +145,14 @@ function filterMockStudies(
     if (filters.folderId != null) {
       if (filters.folderId === '' || filters.folderId === 'all') return true
       if (s.folderId !== filters.folderId) return false
+    }
+    if (filters.tagIds && filters.tagIds.length > 0) {
+      const tagNames = filters.tagIds
+        .map((tid) => tagList.find((t) => t.id === tid)?.name)
+        .filter(Boolean) as string[]
+      const studyTags = (s.tags ?? []).map((t) => t.toLowerCase())
+      const hasTag = tagNames.some((n) => studyTags.includes(n.toLowerCase()))
+      if (!hasTag) return false
     }
     if (filters.startDate && s.lastModified < filters.startDate) return false
     if (filters.endDate && s.lastModified > filters.endDate) return false
@@ -222,16 +236,17 @@ export function useStudyLibraryFolders() {
 export function useStudyLibraryTags() {
   const [tags, setTags] = useState<TagType[]>([])
 
-  useEffect(() => {
-    const load = async () => {
-      const data = await fetchTags()
-      const list = data ?? []
-      setTags(list.length > 0 ? list : (mockStudyLibraryTags ?? []))
-    }
-    load()
+  const refetch = useCallback(async () => {
+    const data = await fetchTags()
+    const list = Array.isArray(data) ? data : []
+    setTags(list.length > 0 ? list : (mockStudyLibraryTags ?? []))
   }, [])
 
-  return { tags }
+  useEffect(() => {
+    refetch()
+  }, [refetch])
+
+  return { tags, refetch }
 }
 
 export function useStudyLibraryFilterOptions() {
@@ -254,4 +269,6 @@ export {
   exportStudies,
   shareStudies,
   deleteStudies,
+  createTag,
+  updateStudyTags,
 }

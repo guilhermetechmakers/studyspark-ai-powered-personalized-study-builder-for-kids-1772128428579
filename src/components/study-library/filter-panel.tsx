@@ -2,7 +2,7 @@
  * FilterPanel - Child, Subject, Learning Style, Date Range, Starred filters.
  */
 
-import { Filter, X } from 'lucide-react'
+import { Filter, Tag, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -23,6 +23,7 @@ export interface FilterPanelProps {
   children: { id: string; name: string }[]
   subjects: { id: string; name: string }[]
   learningStyles: { id: string; name: string }[]
+  tags?: { id: string; name: string; color?: string }[]
   className?: string
 }
 
@@ -32,12 +33,14 @@ export function FilterPanel({
   children,
   subjects,
   learningStyles,
+  tags = [],
   className,
 }: FilterPanelProps) {
   const hasActiveFilters =
     !!filters.childId ||
     !!filters.subjectId ||
     !!filters.learningStyleId ||
+    (filters.tagIds?.length ?? 0) > 0 ||
     !!filters.startDate ||
     !!filters.endDate ||
     filters.starred === true
@@ -48,15 +51,25 @@ export function FilterPanel({
       childId: undefined,
       subjectId: undefined,
       learningStyleId: undefined,
+      tagIds: undefined,
       startDate: undefined,
       endDate: undefined,
       starred: undefined,
     })
   }
 
+  const toggleTag = (tagId: string) => {
+    const current = filters.tagIds ?? []
+    const next = current.includes(tagId)
+      ? current.filter((id) => id !== tagId)
+      : [...current, tagId]
+    onChange({ ...filters, tagIds: next.length > 0 ? next : undefined })
+  }
+
   const childList = children ?? []
   const subjectList = subjects ?? []
   const styleList = learningStyles ?? []
+  const tagList = tags ?? []
 
   return (
     <div
@@ -119,6 +132,42 @@ export function FilterPanel({
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+
+      {tagList.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+            <Tag className="h-3.5 w-3.5" />
+            Tags
+          </Label>
+          <div className="flex flex-wrap gap-1.5">
+            {tagList.map((t) => {
+              const isActive = (filters.tagIds ?? []).includes(t.id)
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => toggleTag(t.id)}
+                  className={cn(
+                    'rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200',
+                    'hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    isActive
+                      ? 'ring-2 ring-primary/50 shadow-sm'
+                      : 'bg-muted/80 hover:bg-muted'
+                  )}
+                  style={
+                    isActive && t.color
+                      ? { backgroundColor: `${t.color}30`, borderColor: t.color }
+                      : undefined
+                  }
+                  aria-pressed={isActive}
+                >
+                  {t.name}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 

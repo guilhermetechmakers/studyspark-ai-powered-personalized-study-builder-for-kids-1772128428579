@@ -107,11 +107,11 @@ export const mockStudyLibraryStudies: StudyCardType[] = [
 ]
 
 export const mockStudyLibraryTags: TagType[] = [
-  { id: 't1', name: 'fractions', category: 'math' },
-  { id: 't2', name: 'decimals', category: 'math' },
-  { id: 't3', name: 'biology', category: 'science' },
-  { id: 't4', name: 'history', category: 'social' },
-  { id: 't5', name: 'verbs', category: 'language' },
+  { id: 't1', name: 'fractions', category: 'math', color: '#A9A6F9' },
+  { id: 't2', name: 'decimals', category: 'math', color: '#FFAD5A' },
+  { id: 't3', name: 'biology', category: 'science', color: '#FFB085' },
+  { id: 't4', name: 'history', category: 'social', color: '#5B57A5' },
+  { id: 't5', name: 'verbs', category: 'language', color: '#FFF5A5' },
 ]
 
 export const mockSubjects = [

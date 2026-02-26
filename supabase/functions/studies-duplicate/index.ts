@@ -86,6 +86,10 @@ Deno.serve(async (req) => {
       exam_date: study.exam_date ?? null,
       child_profile_id: study.child_profile_id ?? null,
       generation_options: study.generation_options ?? {},
+      folder_id: study.folder_id ?? null,
+      description: study.description ?? null,
+      is_public: study.is_public ?? false,
+      version: 1,
     }
 
     const { data: insertedStudy, error: insertErr } = await supabase
