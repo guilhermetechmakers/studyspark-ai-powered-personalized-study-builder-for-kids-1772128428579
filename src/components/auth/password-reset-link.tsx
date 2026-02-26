@@ -8,7 +8,7 @@ export interface PasswordResetLinkProps {
 export function PasswordResetLink({ className }: PasswordResetLinkProps) {
   return (
     <Link
-      to="/forgot-password"
+      to="/password-reset"
       className={cn(
         'text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded px-1',
         className

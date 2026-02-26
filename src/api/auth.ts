@@ -95,12 +95,35 @@ export async function signInWithOAuth(provider: 'google' | 'apple' | 'facebook')
 
 export async function requestPasswordReset(email: string): Promise<{ success: boolean }> {
   if (hasSupabase) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/password-reset`
+        : undefined
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    })
     if (error) throw new Error(error.message)
     return { success: true }
   }
   await new Promise((r) => setTimeout(r, 600))
   return { success: true }
+}
+
+export async function updatePassword(newPassword: string): Promise<{ success: boolean }> {
+  if (hasSupabase) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw new Error(error.message)
+    return { success: true }
+  }
+  await new Promise((r) => setTimeout(r, 500))
+  return { success: true }
+}
+
+/** Check if current session is from a password recovery link (hash type=recovery). */
+export function hasRecoverySession(): boolean {
+  if (typeof window === 'undefined') return false
+  const hash = window.location.hash ?? ''
+  return hash.includes('type=recovery') && hash.includes('access_token')
 }
 
 export type VerificationStatus = 'pending' | 'verified' | 'error'

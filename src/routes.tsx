@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { LandingPage } from '@/pages/landing'
 import { LoginPage } from '@/pages/login'
 import { VerifyEmailPage } from '@/pages/verify-email'
-import { ForgotPasswordPage } from '@/pages/forgot-password'
+import { PasswordResetPage } from '@/pages/password-reset'
 import { DashboardOverview } from '@/pages/dashboard-overview'
 import { DashboardStudies } from '@/pages/dashboard-studies'
 import { CreateStudyWizard } from '@/pages/create-study-wizard'
@@ -58,7 +58,8 @@ export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <LoginPage /> },
   { path: '/verify-email', element: <VerifyEmailPage /> },
-  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/forgot-password', element: <PasswordResetPage /> },
+  { path: '/password-reset', element: <PasswordResetPage /> },
   { path: '/help', element: <HelpPage /> },
   { path: '/about', element: <HelpPage /> },
   { path: '/privacy', element: <LegalPage title="Privacy Policy" content={privacyContent} /> },
