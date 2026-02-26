@@ -19,6 +19,11 @@ import type {
   SystemLog,
   SystemHealthSummary,
   PaginatedResponse,
+  AuditLogEntry,
+  ContentReviewItem,
+  ModerationQueueItem,
+  AdminRole,
+  AdminPermission,
 } from '@/types/admin'
 import {
   mockUsers,
@@ -29,6 +34,11 @@ import {
   mockTimeSeries,
   mockLogs,
   mockHealthSummary,
+  mockAuditLogs,
+  mockContentReviewItems,
+  mockModerationQueueItems,
+  mockAdminRoles,
+  mockAdminPermissions,
 } from '@/data/admin-mock'
 
 const ADMIN_BASE = '/admin'
@@ -141,6 +151,17 @@ export async function fetchModerationQueue(
   query: ModerationQuery = {}
 ): Promise<ContentItem[]> {
   try {
+    const { fetchAdminModerationQueue } = await import('@/api/admin-supabase')
+    return await fetchAdminModerationQueue({
+      type: query.type,
+      status: query.status,
+      limit: 50,
+      offset: 0,
+    })
+  } catch {
+    // fallback
+  }
+  try {
     const params = new URLSearchParams()
     if (query.type) params.set('type', query.type)
     if (query.status) params.set('status', query.status)
@@ -162,6 +183,13 @@ export async function fetchModerationQueue(
 
 export async function approveContent(id: string): Promise<void> {
   try {
+    const { submitAdminModerationAction } = await import('@/api/admin-supabase')
+    await submitAdminModerationAction({ action: 'approve', id })
+    return
+  } catch {
+    // fallback
+  }
+  try {
     await apiPost(`${ADMIN_BASE}/moderation/${id}/approve`)
   } catch {
     // Mock: no-op
@@ -170,6 +198,13 @@ export async function approveContent(id: string): Promise<void> {
 
 export async function banContent(id: string): Promise<void> {
   try {
+    const { submitAdminModerationAction } = await import('@/api/admin-supabase')
+    await submitAdminModerationAction({ action: 'ban', id })
+    return
+  } catch {
+    // fallback
+  }
+  try {
     await apiPost(`${ADMIN_BASE}/moderation/${id}/ban`)
   } catch {
     // Mock: no-op
@@ -177,6 +212,13 @@ export async function banContent(id: string): Promise<void> {
 }
 
 export async function requestChanges(id: string, note?: string): Promise<void> {
+  try {
+    const { submitAdminModerationAction } = await import('@/api/admin-supabase')
+    await submitAdminModerationAction({ action: 'request_changes', id, payload: { note } })
+    return
+  } catch {
+    // fallback
+  }
   try {
     await apiPost(`${ADMIN_BASE}/moderation/${id}/change`, { note })
   } catch {
@@ -246,6 +288,13 @@ export async function createCoupon(body: Partial<Coupon>): Promise<Coupon> {
 
 export async function fetchAnalyticsKpis(_params?: { range?: string }): Promise<AnalyticsKpis> {
   try {
+    const { fetchAdminDashboard } = await import('@/api/admin-supabase')
+    const { kpis } = await fetchAdminDashboard()
+    return kpis
+  } catch {
+    // fallback to REST or mock
+  }
+  try {
     const res = await apiGet<AnalyticsKpis | { data?: AnalyticsKpis }>(
       `${ADMIN_BASE}/analytics/kpis`
     )
@@ -282,6 +331,13 @@ export async function fetchAnalyticsCharts(
 
 export async function fetchHealthSummary(): Promise<SystemHealthSummary> {
   try {
+    const { fetchAdminHealth } = await import('@/api/admin-supabase')
+    const { summary } = await fetchAdminHealth()
+    return summary
+  } catch {
+    // fallback
+  }
+  try {
     const res = await apiGet<SystemHealthSummary | { data?: SystemHealthSummary }>(
       `${ADMIN_BASE}/health/summary`
     )
@@ -298,6 +354,13 @@ export async function fetchHealthLogs(
   level?: string,
   component?: string
 ): Promise<SystemLog[]> {
+  try {
+    const { fetchAdminHealth } = await import('@/api/admin-supabase')
+    const { logs } = await fetchAdminHealth()
+    return Array.isArray(logs) ? logs : []
+  } catch {
+    // fallback
+  }
   try {
     const params = new URLSearchParams()
     if (level) params.set('level', level)
@@ -351,4 +414,221 @@ export async function fetchSystemLogs(query?: {
   component?: string
 }): Promise<SystemLog[]> {
   return fetchHealthLogs(query?.level, query?.component)
+}
+
+// --- Audit Logs ---
+
+export interface AuditLogsQuery {
+  resource_type?: string
+  resource_id?: string
+  resourceType?: string
+  resourceId?: string
+  action?: string
+  admin_id?: string
+  adminId?: string
+  from?: string
+  to?: string
+  limit?: number
+  offset?: number
+  page?: number
+}
+
+export async function fetchAuditLogs(
+  query: AuditLogsQuery = {}
+): Promise<{ data: AuditLogEntry[]; total: number }> {
+  try {
+    const { fetchAdminAuditLogs } = await import('@/api/admin-supabase')
+    const res = await fetchAdminAuditLogs({
+      action: query.action,
+      target_type: query.resourceType ?? query.resource_type,
+      limit: query.limit ?? 50,
+      offset: query.offset ?? (query.page ? (query.page - 1) * (query.limit ?? 50) : 0),
+    })
+    return { data: res.data ?? [], total: res.count ?? 0 }
+  } catch {
+    // fallback
+  }
+  try {
+    const params = new URLSearchParams()
+    if (query.resourceType ?? query.resource_type) params.set('resource_type', query.resourceType ?? query.resource_type ?? '')
+    if (query.resourceId ?? query.resource_id) params.set('resource_id', query.resourceId ?? query.resource_id ?? '')
+    if (query.action) params.set('action', query.action)
+    if (query.adminId ?? query.admin_id) params.set('admin_id', query.adminId ?? query.admin_id ?? '')
+    if (query.from) params.set('from', query.from)
+    if (query.to) params.set('to', query.to)
+    if (query.limit != null) params.set('limit', String(query.limit))
+    if (query.offset != null) params.set('offset', String(query.offset))
+    const qs = params.toString()
+    const res = await apiGet<{ data?: AuditLogEntry[]; total?: number }>(
+      `${ADMIN_BASE}/audit-logs${qs ? `?${qs}` : ''}`
+    )
+    const data = safeArray<AuditLogEntry>((res as { data?: AuditLogEntry[] })?.data ?? res)
+    const total = (res as { total?: number })?.total ?? data.length
+    return { data, total }
+  } catch {
+    const filtered = [...mockAuditLogs] as AuditLogEntry[]
+    return { data: filtered, total: filtered.length }
+  }
+}
+
+export async function exportAuditLogsCSV(query: AuditLogsQuery = {}): Promise<Blob> {
+  try {
+    const { fetchAdminAuditLogsCSV } = await import('@/api/admin-supabase')
+    return await fetchAdminAuditLogsCSV({
+      action: query.action,
+      target_type: query.resourceType ?? query.resource_type,
+    })
+  } catch {
+    // fallback
+  }
+  const { data } = await fetchAuditLogs({ ...query, limit: 10000 })
+  const headers = ['ID', 'Admin', 'Action', 'Target Type', 'Target ID', 'Created']
+  const rows = (data ?? []).map((r) =>
+    [r.id, r.adminEmail ?? r.adminId, r.action, r.targetType, r.targetId ?? '', r.createdAt].join(',')
+  )
+  const csv = [headers.join(','), ...rows].join('\n')
+  return new Blob([csv], { type: 'text/csv' })
+}
+
+// --- Content Review ---
+
+export interface ContentReviewQuery {
+  status?: string
+  contentType?: string
+  limit?: number
+  offset?: number
+}
+
+export async function fetchContentReviewQueue(
+  query: ContentReviewQuery = {}
+): Promise<ContentReviewItem[]> {
+  try {
+    const params = new URLSearchParams()
+    if (query.status) params.set('status', query.status)
+    if (query.contentType) params.set('contentType', query.contentType)
+    if (query.limit != null) params.set('limit', String(query.limit))
+    if (query.offset != null) params.set('offset', String(query.offset))
+    const qs = params.toString()
+    const res = await apiGet<{ data?: ContentReviewItem[] } | ContentReviewItem[]>(
+      `${ADMIN_BASE}/content-review/queue${qs ? `?${qs}` : ''}`
+    )
+    const arr = Array.isArray(res) ? res : safeArray<ContentReviewItem>((res as { data?: ContentReviewItem[] })?.data)
+    return arr ?? []
+  } catch {
+    let filtered = [...mockContentReviewItems]
+    if (query.status && query.status !== 'all') {
+      filtered = filtered.filter((c) => c.status === query.status)
+    }
+    if (query.contentType && query.contentType !== 'all') {
+      filtered = filtered.filter((c) => c.contentType === query.contentType)
+    }
+    return filtered
+  }
+}
+
+export async function contentReviewAction(
+  id: string,
+  action: 'approve' | 'reject' | 'request_changes' | 'escalate',
+  note?: string
+): Promise<void> {
+  try {
+    await apiPost(`${ADMIN_BASE}/content-review/actions`, { id, action, note })
+  } catch {
+    // Mock: no-op
+  }
+}
+
+export async function bulkContentReviewAction(
+  ids: string[],
+  action: 'approve' | 'reject',
+  note?: string
+): Promise<void> {
+  try {
+    await apiPost(`${ADMIN_BASE}/content-review/actions`, { ids, action, note })
+  } catch {
+    // Mock: no-op
+  }
+}
+
+// --- User Moderation Queue ---
+
+export interface ModerationQueueQuery {
+  status?: string
+  search?: string
+  limit?: number
+  offset?: number
+}
+
+export async function fetchModerationQueueItems(
+  query: ModerationQueueQuery = {}
+): Promise<ModerationQueueItem[]> {
+  try {
+    const params = new URLSearchParams()
+    if (query.status) params.set('status', query.status)
+    if (query.search) params.set('search', query.search)
+    if (query.limit != null) params.set('limit', String(query.limit))
+    if (query.offset != null) params.set('offset', String(query.offset))
+    const qs = params.toString()
+    const res = await apiGet<{ data?: ModerationQueueItem[] } | ModerationQueueItem[]>(
+      `${ADMIN_BASE}/moderation/queue${qs ? `?${qs}` : ''}`
+    )
+    const arr = Array.isArray(res) ? res : safeArray<ModerationQueueItem>((res as { data?: ModerationQueueItem[] })?.data)
+    return arr ?? []
+  } catch {
+    let filtered = [...mockModerationQueueItems]
+    if (query.status && query.status !== 'all') {
+      filtered = filtered.filter((m) => m.status === query.status)
+    }
+    return filtered
+  }
+}
+
+export async function moderationAction(
+  id: string,
+  action: 'suspend' | 'deactivate' | 'warn' | 'unblock' | 'assign_reviewer',
+  payload?: Record<string, unknown>
+): Promise<void> {
+  try {
+    await apiPost(`${ADMIN_BASE}/moderation/actions`, { id, action, ...payload })
+  } catch {
+    // Mock: no-op
+  }
+}
+
+export async function bulkModerationAction(
+  ids: string[],
+  action: 'suspend' | 'deactivate' | 'warn' | 'unblock',
+  payload?: Record<string, unknown>
+): Promise<void> {
+  try {
+    await apiPost(`${ADMIN_BASE}/moderation/actions`, { ids, action, ...payload })
+  } catch {
+    // Mock: no-op
+  }
+}
+
+// --- Admin Settings (Roles & Permissions) ---
+
+export async function fetchAdminRoles(): Promise<AdminRole[]> {
+  try {
+    const res = await apiGet<{ data?: AdminRole[] } | AdminRole[]>(`${ADMIN_BASE}/settings/roles`)
+    const arr = Array.isArray(res) ? res : safeArray<AdminRole>((res as { data?: AdminRole[] })?.data)
+    return arr ?? []
+  } catch {
+    return [...mockAdminRoles]
+  }
+}
+
+export async function fetchAdminPermissions(): Promise<AdminPermission[]> {
+  try {
+    const res = await apiGet<{ data?: AdminPermission[] } | AdminPermission[]>(
+      `${ADMIN_BASE}/settings/permissions`
+    )
+    const arr = Array.isArray(res)
+      ? res
+      : safeArray<AdminPermission>((res as { data?: AdminPermission[] })?.data)
+    return arr ?? []
+  } catch {
+    return [...mockAdminPermissions]
+  }
 }

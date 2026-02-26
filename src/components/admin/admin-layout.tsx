@@ -15,6 +15,9 @@ import {
   LogOut,
   Mail,
   Webhook,
+  FileCheck,
+  ScrollText,
+  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -30,13 +33,17 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 const adminNavItems = [
+  { to: '/admin', label: 'Overview', icon: Sparkles },
   { to: '/admin/users', label: 'Users', icon: Users },
-  { to: '/admin/moderation', label: 'Moderation', icon: ShieldCheck },
+  { to: '/admin/moderation', label: 'User Moderation', icon: ShieldCheck },
+  { to: '/admin/content-review', label: 'Content Review', icon: FileCheck },
   { to: '/admin/plans', label: 'Plans', icon: CreditCard },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
   { to: '/admin/notifications', label: 'Notifications', icon: Mail },
   { to: '/admin/health', label: 'System Health', icon: Activity },
   { to: '/admin/webhooks', label: 'Webhooks', icon: Webhook },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
 export function AdminLayout() {

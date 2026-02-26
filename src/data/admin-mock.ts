@@ -12,6 +12,11 @@ import type {
   AnalyticsDataPoint,
   SystemLog,
   SystemHealthSummary,
+  AdminAuditLog,
+  ContentReviewItem,
+  ModerationQueueItem,
+  AdminRole,
+  AdminPermission,
 } from '@/types/admin'
 
 export const mockUsers: AdminUser[] = [
@@ -218,3 +223,93 @@ export const mockHealthSummary: SystemHealthSummary = {
   errorCount: 3,
   lastUpdated: new Date().toISOString(),
 }
+
+export const mockAuditLogs: AdminAuditLog[] = [
+  {
+    id: 'al1',
+    adminId: 'u4',
+    adminEmail: 'david@example.com',
+    action: 'user_suspended',
+    targetId: 'u3',
+    targetType: 'user',
+    payload: { reason: 'Terms violation' },
+    createdAt: '2025-02-26T10:00:00Z',
+  },
+  {
+    id: 'al2',
+    adminId: 'u4',
+    adminEmail: 'david@example.com',
+    action: 'content_approved',
+    targetId: 'c3',
+    targetType: 'content',
+    payload: {},
+    createdAt: '2025-02-26T09:45:00Z',
+  },
+  {
+    id: 'al3',
+    adminId: 'u4',
+    adminEmail: 'david@example.com',
+    action: 'export_report',
+    targetType: 'report',
+    payload: { type: 'moderation' },
+    createdAt: '2025-02-26T09:30:00Z',
+  },
+]
+
+export const mockContentReviewItems: ContentReviewItem[] = [
+  {
+    id: 'cr1',
+    contentId: 'c1',
+    contentType: 'study',
+    title: 'Math Basics - Fractions',
+    submittedBy: 'u1',
+    submittedByName: 'Alice Johnson',
+    status: 'pending',
+    createdAt: '2025-02-24T10:00:00Z',
+    updatedAt: '2025-02-24T10:00:00Z',
+    version: 1,
+  },
+  {
+    id: 'cr2',
+    contentId: 'c2',
+    contentType: 'material',
+    title: 'Science Worksheet',
+    submittedBy: 'u2',
+    submittedByName: 'Bob Smith',
+    status: 'changes_requested',
+    assignedTo: 'u4',
+    assignedToName: 'David Brown',
+    metadata: { note: 'Please add attribution' },
+    createdAt: '2025-02-23T15:30:00Z',
+    updatedAt: '2025-02-25T11:00:00Z',
+    version: 2,
+  },
+]
+
+export const mockModerationQueueItems: ModerationQueueItem[] = [
+  {
+    id: 'mq1',
+    userId: 'u3',
+    userEmail: 'carol@example.com',
+    userName: 'Carol Williams',
+    reason: 'Repeated policy violations',
+    status: 'pending',
+    createdAt: '2025-02-25T14:00:00Z',
+    updatedAt: '2025-02-25T14:00:00Z',
+  },
+]
+
+export const mockAdminRoles: AdminRole[] = [
+  { id: 'r1', name: 'Super Admin', permissions: ['admin:*'], description: 'Full access' },
+  { id: 'r2', name: 'Moderator', permissions: ['admin:moderation', 'admin:content-review'], description: 'Moderation only' },
+  { id: 'r3', name: 'Analyst', permissions: ['admin:analytics', 'admin:audit'], description: 'Analytics and audit' },
+]
+
+export const mockAdminPermissions: AdminPermission[] = [
+  { id: 'p1', name: 'admin:*', description: 'All admin permissions', category: 'General' },
+  { id: 'p2', name: 'admin:moderation', description: 'User moderation', category: 'Moderation' },
+  { id: 'p3', name: 'admin:content-review', description: 'Content review', category: 'Content' },
+  { id: 'p4', name: 'admin:analytics', description: 'Analytics dashboards', category: 'Analytics' },
+  { id: 'p5', name: 'admin:audit', description: 'Audit logs', category: 'Audit' },
+  { id: 'p6', name: 'admin:settings', description: 'Admin settings', category: 'Settings' },
+]

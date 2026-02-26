@@ -33,10 +33,19 @@ export function AdminOverviewPage() {
     let cancelled = false
     async function load() {
       try {
-        const [k, h] = await Promise.all([fetchAnalyticsKpis(), fetchSystemHealthSummary()])
-        if (!cancelled) {
-          setKpis(k)
-          setHealth(h)
+        try {
+          const { fetchAdminDashboard } = await import('@/api/admin-supabase')
+          const { kpis: k, health: h } = await fetchAdminDashboard()
+          if (!cancelled) {
+            setKpis(k)
+            setHealth(h)
+          }
+        } catch {
+          const [k, h] = await Promise.all([fetchAnalyticsKpis(), fetchSystemHealthSummary()])
+          if (!cancelled) {
+            setKpis(k)
+            setHealth(h)
+          }
         }
       } finally {
         if (!cancelled) setIsLoading(false)

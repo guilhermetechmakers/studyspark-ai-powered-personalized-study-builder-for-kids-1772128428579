@@ -30,9 +30,13 @@ import { TermsOfServicePage } from '@/pages/terms-of-service'
 import { OnboardingAcceptTermsPage } from '@/pages/onboarding-accept-terms'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { AdminLayout } from '@/components/admin/admin-layout'
+import { AdminGuard } from '@/components/admin/admin-guard'
 import { AdminOverviewPage } from '@/pages/admin-overview'
 import { AdminUsersPage } from '@/pages/admin-users'
-import { AdminModerationPage } from '@/pages/admin-moderation'
+import { AdminUserModerationPage } from '@/pages/admin-user-moderation'
+import { AdminContentReviewPage } from '@/pages/admin-content-review'
+import { AdminAuditLogsPage } from '@/pages/admin-audit-logs'
+import { AdminSettingsPage } from '@/pages/admin-settings'
 import { AdminPlansPage } from '@/pages/admin-plans'
 import { AdminAnalyticsPage } from '@/pages/admin-analytics'
 import { AdminHealthPage } from '@/pages/admin-health'
@@ -97,19 +101,24 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <ProtectedRoute>
-        <AdminLayout />
+        <AdminGuard>
+          <AdminLayout />
+        </AdminGuard>
       </ProtectedRoute>
     ),
     children: [
       { index: true, element: <AdminOverviewPage /> },
       { path: 'users', element: <AdminUsersPage /> },
-      { path: 'moderation', element: <AdminModerationPage /> },
+      { path: 'moderation', element: <AdminUserModerationPage /> },
+      { path: 'content-review', element: <AdminContentReviewPage /> },
       { path: 'plans', element: <AdminPlansPage /> },
       { path: 'analytics', element: <AdminAnalyticsPage /> },
+      { path: 'audit-logs', element: <AdminAuditLogsPage /> },
       { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'health', element: <AdminHealthPage /> },
       { path: 'webhooks', element: <AdminWebhooksPage /> },
       { path: 'payments/webhooks', element: <AdminPaymentsWebhooksPage /> },
+      { path: 'settings', element: <AdminSettingsPage /> },
     ],
   },
   { path: '/search', element: <SearchRedirectPage /> },
