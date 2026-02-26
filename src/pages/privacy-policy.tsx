@@ -140,7 +140,7 @@ export function PrivacyPolicyPage() {
               Terms of Service
             </Link>
             <Link
-              to="/cookies"
+              to="/cookie-policy"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:rounded"
             >
               Cookie Policy

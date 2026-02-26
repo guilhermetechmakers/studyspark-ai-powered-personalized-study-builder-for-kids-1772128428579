@@ -1,6 +1,10 @@
+/**
+ * CategoryToggle - Accessible toggle switch for cookie consent categories.
+ * Uses role="switch", aria-checked, and keyboard support.
+ */
 import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import type { LucideIcon } from 'lucide-react'
 
 export interface CategoryToggleProps {
   id: string
@@ -9,7 +13,7 @@ export interface CategoryToggleProps {
   value: boolean
   onChange: (id: string, value: boolean) => void
   disabled?: boolean
-  icon?: LucideIcon
+  icon?: React.ReactNode
   className?: string
 }
 
@@ -20,46 +24,64 @@ export function CategoryToggle({
   value,
   onChange,
   disabled = false,
-  icon: Icon,
+  icon,
   className,
 }: CategoryToggleProps) {
   const handleChange = (checked: boolean) => {
-    if (!disabled) {
-      onChange(id, checked)
-    }
+    if (!disabled) onChange(id, checked)
   }
 
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-5 transition-all duration-200 hover:shadow-card md:flex-row md:items-start md:justify-between md:gap-6',
+        'flex flex-col gap-3 rounded-2xl border border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/30 via-white to-[rgb(var(--lavender))]/15 p-5 md:p-6 transition-all duration-300 hover:shadow-card',
+        disabled && 'opacity-90',
         className
       )}
+      role="group"
+      aria-labelledby={`${id}-label`}
+      aria-describedby={`${id}-desc`}
     >
-      <div className="flex min-w-0 flex-1 gap-4">
-        {Icon && (
-          <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-            aria-hidden
-          >
-            <Icon className="h-5 w-5" />
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          {icon && (
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+              aria-hidden
+            >
+              {icon}
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <Label
+              id={`${id}-label`}
+              htmlFor={`${id}-toggle`}
+              className="text-base font-semibold text-foreground cursor-pointer"
+            >
+              {label}
+              {disabled && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  (Required)
+                </span>
+              )}
+            </Label>
+            <p
+              id={`${id}-desc`}
+              className="mt-1 text-sm text-muted-foreground leading-relaxed"
+            >
+              {description}
+            </p>
           </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-foreground">{label}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-3">
         <Switch
-          id={`cookie-${id}`}
+          id={`${id}-toggle`}
           checked={value}
           onCheckedChange={handleChange}
           disabled={disabled}
           role="switch"
           aria-checked={value}
           aria-label={`${label} cookies: ${value ? 'enabled' : 'disabled'}`}
-          className="data-[state=checked]:bg-primary"
+          className="shrink-0 mt-1"
         />
       </div>
     </div>

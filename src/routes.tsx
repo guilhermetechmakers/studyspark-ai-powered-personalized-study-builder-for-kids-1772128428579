@@ -17,6 +17,7 @@ import { ErrorPage } from '@/pages/error'
 import { AboutHelpPage } from '@/pages/about-help'
 import { LegalPage } from '@/pages/legal'
 import { PrivacyPolicyPage } from '@/pages/privacy-policy'
+import { CookiePolicyPage } from '@/pages/cookie-policy'
 import { TermsOfServicePage } from '@/pages/terms-of-service'
 import { OnboardingAcceptTermsPage } from '@/pages/onboarding-accept-terms'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
   { path: '/terms-of-service', element: <TermsOfServicePage /> },
   { path: '/onboarding/accept-terms', element: <OnboardingAcceptTermsPage /> },
   { path: '/cookies', element: <LegalPage title="Cookie Policy" content={cookiesContent} /> },
+  { path: '/cookie-policy', element: <CookiePolicyPage /> },
   {
     path: '/dashboard',
     element: <DashboardLayout />,

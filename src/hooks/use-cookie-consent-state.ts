@@ -94,9 +94,16 @@ export function useCookieConsentState() {
     persistCategories(defaults)
   }, [])
 
+  const updateCategory = useCallback((id: string, enabled: boolean) => {
+    setCategoriesSafe((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, enabled } : c))
+    )
+  }, [setCategoriesSafe])
+
   return {
     categories,
     setCategories: setCategoriesSafe,
+    updateCategory,
     saveConsent,
     revokeConsent,
   }

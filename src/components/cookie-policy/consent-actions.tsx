@@ -1,3 +1,6 @@
+/**
+ * ConsentActions - Save Preferences and Revoke Consent buttons with feedback.
+ */
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -5,6 +8,7 @@ export interface ConsentActionsProps {
   onSave: () => void
   onRevoke: () => void
   saving?: boolean
+  savedMessage?: string | null
   className?: string
 }
 
@@ -12,42 +16,49 @@ export function ConsentActions({
   onSave,
   onRevoke,
   saving = false,
+  savedMessage = null,
   className,
 }: ConsentActionsProps) {
   return (
     <div
       className={cn(
-        'flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6',
+        'flex flex-col gap-4 rounded-2xl border border-border/60 bg-gradient-to-br from-[rgb(var(--lavender))]/20 via-white to-[rgb(var(--peach-light))]/30 p-6 md:p-8',
         className
       )}
+      role="group"
+      aria-label="Cookie consent actions"
     >
-      <Button
-        onClick={onSave}
-        disabled={saving}
-        size="lg"
-        className="min-w-[180px] transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-      >
-        {saving ? (
-          <span className="flex items-center gap-2">
-            <span
-              className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
-              aria-hidden
-            />
-            Saving…
-          </span>
-        ) : (
-          'Save Preferences'
-        )}
-      </Button>
-      <Button
-        onClick={onRevoke}
-        variant="outline"
-        disabled={saving}
-        size="lg"
-        className="min-w-[180px] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        Revoke Consent
-      </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <Button
+          onClick={onSave}
+          disabled={saving}
+          size="lg"
+          className="rounded-full shadow-md hover:shadow-lg min-w-[160px]"
+          aria-busy={saving}
+          aria-live="polite"
+        >
+          {saving ? 'Saving…' : 'Save Preferences'}
+        </Button>
+        <Button
+          onClick={onRevoke}
+          variant="outline"
+          size="lg"
+          className="rounded-full min-w-[160px]"
+          disabled={saving}
+          aria-label="Revoke all cookie consent and reset to defaults"
+        >
+          Revoke Consent
+        </Button>
+      </div>
+      {savedMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="text-sm font-medium text-primary"
+        >
+          {savedMessage}
+        </div>
+      )}
     </div>
   )
 }
