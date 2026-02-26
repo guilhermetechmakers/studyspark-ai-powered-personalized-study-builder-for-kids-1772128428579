@@ -4,7 +4,7 @@ import { LoginPage } from '@/pages/login'
 import { VerifyEmailPage } from '@/pages/verify-email'
 import { PasswordResetPage } from '@/pages/password-reset'
 import { DashboardOverview } from '@/pages/dashboard-overview'
-import { DashboardStudies } from '@/pages/dashboard-studies'
+import { StudyLibraryPage } from '@/pages/study-library'
 import { CreateStudyWizard } from '@/pages/create-study-wizard'
 import { UploadMaterialsPage } from '@/pages/upload-materials'
 import { StudyDetailPage } from '@/pages/study-detail'
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
     element: <DashboardLayout />,
     children: [
       { index: true, element: <DashboardOverview /> },
-      { path: 'studies', element: <DashboardStudies /> },
+      { path: 'studies', element: <StudyLibraryPage /> },
       { path: 'studies/:id', element: <StudyReviewPage /> },
       { path: 'studies/:id/detail', element: <StudyDetailPage /> },
       { path: 'create', element: <CreateStudyWizard /> },
