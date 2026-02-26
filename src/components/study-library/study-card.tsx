@@ -12,6 +12,7 @@ import {
   Share2,
   Trash2,
   Star,
+  Play,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -221,6 +222,12 @@ export function StudyCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to={`/study/${study.id}/play`}>
+                      <Play className="mr-2 h-4 w-4" />
+                      Play (Study Viewer)
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to={`/dashboard/studies/${study.id}`}>
                       <ExternalLink className="mr-2 h-4 w-4" />

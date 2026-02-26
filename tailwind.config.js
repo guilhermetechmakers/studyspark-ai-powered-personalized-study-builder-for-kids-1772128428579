@@ -88,6 +88,23 @@ export default {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' },
         },
+        'flip-card': {
+          '0%': { transform: 'rotateY(0deg)' },
+          '100%': { transform: 'rotateY(180deg)' },
+        },
+        'flip-card-back': {
+          '0%': { transform: 'rotateY(180deg)' },
+          '100%': { transform: 'rotateY(0deg)' },
+        },
+        'bounce-in': {
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '70%': { transform: 'scale(1.02)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'celebration': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.1)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out forwards',
@@ -97,6 +114,10 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         shimmer: 'shimmer 1.5s ease-in-out infinite',
         pulse: 'pulse 2s ease-in-out infinite',
+        'flip-card': 'flip-card 0.4s ease-in-out forwards',
+        'flip-card-back': 'flip-card-back 0.4s ease-in-out forwards',
+        'bounce-in': 'bounce-in 0.4s ease-out forwards',
+        celebration: 'celebration 0.5s ease-in-out',
       },
     },
   },
