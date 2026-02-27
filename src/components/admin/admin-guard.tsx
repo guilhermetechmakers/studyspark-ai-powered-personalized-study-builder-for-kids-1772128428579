@@ -3,7 +3,9 @@
  * Redirects non-admin users to dashboard and shows forbidden for moderators without permission.
  */
 
+import { Loader2 } from 'lucide-react'
 import { Navigate, useLocation } from 'react-router-dom'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useAdminRole } from '@/hooks/use-admin-role'
 import { cn } from '@/lib/utils'
 
@@ -29,15 +31,27 @@ export function AdminGuard({
     return (
       <div
         className={cn(
-          'flex min-h-[50vh] items-center justify-center',
+          'flex min-h-[50vh] items-center justify-center p-4 sm:p-6',
           className
         )}
         role="status"
-        aria-label="Loading"
+        aria-live="polite"
+        aria-busy="true"
+        aria-atomic="true"
+        aria-label="Verifying admin access. Please wait."
       >
+        {/* Visually hidden message for screen readers - announced via aria-live */}
+        <span className="sr-only">Verifying admin access. Please wait.</span>
+
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-pulse rounded-full bg-primary/20" />
-          <p className="text-sm text-muted-foreground">Verifying access…</p>
+          <Loader2
+            className="h-10 w-10 animate-spin text-primary"
+            aria-hidden
+          />
+          <div className="flex flex-col items-center gap-2">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <p className="text-sm text-muted-foreground">Verifying access…</p>
+          </div>
         </div>
       </div>
     )
