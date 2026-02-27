@@ -108,8 +108,9 @@ export function ConfirmationPanel({
               size="sm"
               onClick={handleCopy}
               className="rounded-full shrink-0"
+              aria-label={copied ? 'Order details copied' : 'Copy order details'}
             >
-              <Copy className="mr-2 h-4 w-4" />
+              <Copy className="mr-2 h-4 w-4" aria-hidden />
               {copied ? 'Copied!' : 'Copy'}
             </Button>
           </div>
@@ -129,9 +130,10 @@ export function ConfirmationPanel({
                   size="sm"
                   asChild
                   className="rounded-full"
+                  aria-label={`Download export ${downloadLinks.length > 1 ? `file ${i + 1}` : 'file'}`}
                 >
                   <a href={link} download target="_blank" rel="noopener noreferrer">
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="mr-2 h-4 w-4" aria-hidden />
                     Download {downloadLinks.length > 1 ? `#${i + 1}` : ''}
                   </a>
                 </Button>

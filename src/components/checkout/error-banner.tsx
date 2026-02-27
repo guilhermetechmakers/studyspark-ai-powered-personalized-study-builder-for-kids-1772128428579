@@ -45,6 +45,7 @@ export function ErrorBanner({
             size="sm"
             onClick={onRetry}
             className="rounded-full border-destructive/50 text-destructive hover:bg-destructive/10"
+            aria-label="Retry action"
           >
             Retry
           </Button>

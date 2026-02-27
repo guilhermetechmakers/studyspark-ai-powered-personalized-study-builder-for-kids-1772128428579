@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ShoppingBag, Sparkles } from 'lucide-react'
+import { ShoppingBag, Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -58,6 +59,55 @@ const PLANS_FOR_DISPLAY: PlanOption[] = [
   },
 ]
 
+function CheckoutSkeleton() {
+  return (
+    <div className="grid gap-8 lg:grid-cols-3" role="status" aria-label="Loading checkout">
+      <div className="lg:col-span-2 space-y-6">
+        <Card className="overflow-hidden border-2 border-border/60">
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="mt-2 h-4 w-72 max-w-full" />
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-32 rounded-2xl" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-5 w-32" />
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-2/3 rounded-lg" />
+              </div>
+            </div>
+            <Skeleton className="h-12 w-full rounded-full" />
+          </CardContent>
+        </Card>
+      </div>
+      <div className="space-y-4">
+        <Card className="overflow-hidden rounded-xl shadow-card">
+          <CardHeader>
+            <Skeleton className="h-5 w-32" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-24 rounded-lg" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-10 w-full rounded-full" />
+          </CardContent>
+        </Card>
+      </div>
+      <span className="sr-only">Loading checkout content…</span>
+    </div>
+  )
+}
+
 function computeTotals(
   items: ExportItem[],
   plan: PlanOption | null,
@@ -100,6 +150,7 @@ export function CheckoutPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [step, setStep] = useState<CheckoutStep>('cart')
   const [loading, setLoading] = useState(false)
+  const [itemsLoading, setItemsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const { subtotal, discount, tax, total } = computeTotals(items, selectedPlan, promoResult)
@@ -108,6 +159,7 @@ export function CheckoutPage() {
     const ids = searchParams.get('items')
     const list = ids ? ids.split(',').filter(Boolean) : []
     async function load() {
+      setItemsLoading(true)
       try {
         const data = await fetchExportItems()
         const fetched = Array.isArray(data) ? data : []
@@ -130,6 +182,9 @@ export function CheckoutPage() {
             ? MOCK_EXPORT_ITEMS.filter((i: ExportItem) => list.includes(i.id))
             : MOCK_EXPORT_ITEMS
         )
+        toast.error('Could not load items. Showing sample data.')
+      } finally {
+        setItemsLoading(false)
       }
       if (!selectedPlan) {
         setSelectedPlan(PLANS_FOR_DISPLAY[0] ?? null)
@@ -147,6 +202,7 @@ export function CheckoutPage() {
         setPromoResult(result ?? { valid: false })
       } catch {
         setPromoResult({ valid: false, message: 'Could not validate code' })
+        toast.error('Could not validate promo code')
       } finally {
         setPromoValidating(false)
       }
@@ -239,7 +295,9 @@ export function CheckoutPage() {
           toast.success('Order placed.')
         }
       } catch {
-        setError('Could not verify payment')
+        const msg = 'Could not verify payment'
+        setError(msg)
+        toast.error(msg)
       } finally {
         setLoading(false)
       }
@@ -265,7 +323,9 @@ export function CheckoutPage() {
       setStep('confirmation')
       toast.success('Order completed!')
     } catch {
-      setError('Something went wrong')
+      const msg = 'Something went wrong'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
@@ -301,7 +361,11 @@ export function CheckoutPage() {
           />
           <div className="mt-6 text-center">
             <Link to="/dashboard">
-              <Button variant="outline" className="rounded-full">
+              <Button
+                variant="outline"
+                className="rounded-full"
+                aria-label="Return to dashboard"
+              >
                 Back to Dashboard
               </Button>
             </Link>
@@ -333,7 +397,9 @@ export function CheckoutPage() {
           />
         )}
 
-        {!hasItems ? (
+        {itemsLoading ? (
+          <CheckoutSkeleton />
+        ) : !hasItems ? (
           <Card className="border-2 border-dashed border-border bg-muted/30">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <ShoppingBag className="mb-4 h-16 w-16 text-muted-foreground" aria-hidden />
@@ -342,7 +408,11 @@ export function CheckoutPage() {
                 Add export packs from the Study Library or Create Study to get started.
               </p>
               <Link to="/dashboard/studies">
-                <Button variant="accent" className="mt-6 rounded-full">
+                <Button
+                  variant="accent"
+                  className="mt-6 rounded-full"
+                  aria-label="Browse studies to add export packs"
+                >
                   Browse Studies
                 </Button>
               </Link>
@@ -405,10 +475,20 @@ export function CheckoutPage() {
                       disabled={!canContinue}
                       onClick={handleCreateSession}
                       className="w-full rounded-full text-base"
+                      aria-label={
+                        loading
+                          ? 'Processing your order'
+                          : `Continue to payment — ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(total)}`
+                      }
                     >
-                      {loading
-                        ? 'Processing...'
-                        : `Continue to payment — ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(total)}`}
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />
+                          Processing…
+                        </>
+                      ) : (
+                        `Continue to payment — ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(total)}`
+                      )}
                     </Button>
                   )}
                 </CardContent>

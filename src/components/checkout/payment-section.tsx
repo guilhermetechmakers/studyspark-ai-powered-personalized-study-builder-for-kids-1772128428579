@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
+import { designTokens } from '@/lib/design-tokens'
 import {
   Elements,
   PaymentElement,
@@ -88,6 +89,7 @@ function PaymentFormInner({
         type="submit"
         className="w-full rounded-full"
         disabled={!stripe || !elements || disabled || isProcessing}
+        aria-label={isProcessing ? 'Processing payment' : 'Pay now'}
       >
         {isProcessing ? (
           <>
@@ -191,6 +193,7 @@ export function PaymentSection({
                 onClick={onMockComplete}
                 disabled={disabled || isMockSubmitting}
                 className="w-full rounded-full"
+                aria-label={isMockSubmitting ? 'Processing order' : 'Complete order'}
               >
                 {isMockSubmitting ? 'Processing…' : 'Complete order'}
               </Button>
@@ -215,7 +218,7 @@ export function PaymentSection({
     appearance: {
       theme: 'stripe' as const,
       variables: {
-        colorPrimary: 'rgb(91, 87, 165)',
+        colorPrimary: designTokens.violet,
         borderRadius: '12px',
       },
     },

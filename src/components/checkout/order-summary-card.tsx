@@ -63,6 +63,7 @@ export function OrderSummaryCard({
           className="flex w-full items-center justify-between text-left"
           aria-expanded={expanded}
           aria-controls="order-summary-content"
+          aria-label={expanded ? 'Collapse order summary' : 'Expand order summary'}
         >
           <h3 className="text-lg font-bold text-foreground">Order Summary</h3>
           {expanded ? (
