@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronDown, ChevronUp, Printer, Download, Lightbulb } from 'lucide-react'
+import { ChevronDown, ChevronUp, Printer, Download, Lightbulb, BookOpen, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/settings/empty-state'
 import { fetchOnboardingGuides } from '@/api/help'
 import type { Guide, GuideStep } from '@/types/help'
 function GuideStepItem({
@@ -41,8 +42,8 @@ function GuideStepItem({
         <div className="animate-fade-in pb-4 pl-10 pr-4">
           <p className="text-sm text-muted-foreground">{step.content}</p>
           {step.tip && (
-            <div className="mt-3 flex gap-2 rounded-xl bg-[rgb(var(--tangerine))]/10 p-3">
-              <Lightbulb className="h-4 w-4 shrink-0 text-[rgb(var(--tangerine))]" />
+            <div className="mt-3 flex gap-2 rounded-xl bg-accent/10 p-3">
+              <Lightbulb className="h-4 w-4 shrink-0 text-accent" />
               <p className="text-sm text-foreground">
                 <span className="font-medium">Tip:</span> {step.tip}
               </p>
@@ -143,14 +144,17 @@ function GuideCard({ guide }: { guide: Guide }) {
 export function OnboardingGuides() {
   const [guides, setGuides] = useState<Guide[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadGuides = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const data = await fetchOnboardingGuides()
       setGuides(Array.isArray(data) ? data : [])
     } catch {
       setGuides([])
+      setError('Failed to load guides. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -170,23 +174,44 @@ export function OnboardingGuides() {
       </p>
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {[1, 2].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="mt-2 h-2 w-32" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-24 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+        <div className="space-y-4" role="status" aria-live="polite" aria-label="Loading onboarding guides">
+          <p className="text-sm text-muted-foreground">Loading guides...</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[1, 2].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="mt-2 h-2 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="p-6 py-12">
+            <EmptyState
+              icon={AlertCircle}
+              title="Couldn't load guides"
+              description={error}
+              actionLabel="Try again"
+              onAction={loadGuides}
+            />
+          </CardContent>
+        </Card>
       ) : (guides ?? []).length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-4 p-12 text-center">
-            <p className="text-muted-foreground">No guides available yet</p>
+          <CardContent className="p-6 py-12">
+            <EmptyState
+              icon={BookOpen}
+              title="No guides available yet"
+              description="Check back later or try refreshing to load guides."
+              actionLabel="Refresh guides"
+              onAction={loadGuides}
+            />
           </CardContent>
         </Card>
       ) : (
