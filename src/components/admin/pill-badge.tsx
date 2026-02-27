@@ -24,14 +24,24 @@ export interface PillBadgeProps {
   value: string
   variant?: keyof typeof variantMap
   className?: string
+  /** Accessible label for screen readers. Defaults to "Status: {value}" */
+  'aria-label'?: string
 }
 
-export function PillBadge({ value, variant, className }: PillBadgeProps) {
+export function PillBadge({
+  value,
+  variant,
+  className,
+  'aria-label': ariaLabel,
+}: PillBadgeProps) {
   const badgeVariant = variant ?? (variantMap[value as keyof typeof variantMap] ?? 'default')
+  const label = ariaLabel ?? `Status: ${value}`
   return (
     <Badge
       variant={badgeVariant as 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'}
       className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', className)}
+      role="status"
+      aria-label={label}
     >
       {value}
     </Badge>
