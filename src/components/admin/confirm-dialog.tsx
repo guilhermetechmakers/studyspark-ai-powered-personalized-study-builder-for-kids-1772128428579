@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface ConfirmDialogProps {
@@ -37,13 +38,24 @@ export function ConfirmDialog({
     onOpenChange(false)
   }
 
+  const confirmAriaLabel =
+    variant === 'destructive'
+      ? `${confirmLabel} (destructive action)`
+      : confirmLabel
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" showCloseButton>
+      <DialogContent
+        className="rounded-2xl sm:max-w-md"
+        showCloseButton
+        aria-describedby={description ? 'confirm-dialog-description' : undefined}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && (
-            <DialogDescription>{description}</DialogDescription>
+            <DialogDescription id="confirm-dialog-description">
+              {description}
+            </DialogDescription>
           )}
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
@@ -51,6 +63,7 @@ export function ConfirmDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
+            aria-label={cancelLabel}
             className="rounded-full"
           >
             {cancelLabel}
@@ -59,9 +72,21 @@ export function ConfirmDialog({
             variant={variant === 'destructive' ? 'destructive' : 'default'}
             onClick={handleConfirm}
             disabled={isLoading}
-            className={cn('rounded-full', isLoading && 'opacity-70')}
+            aria-label={confirmAriaLabel}
+            aria-busy={isLoading}
+            className={cn('min-w-[7rem] rounded-full', isLoading && 'opacity-90')}
           >
-            {isLoading ? 'Processing...' : confirmLabel}
+            {isLoading ? (
+              <>
+                <Loader2
+                  className="h-4 w-4 shrink-0 animate-spin"
+                  aria-hidden
+                />
+                <span>Processing...</span>
+              </>
+            ) : (
+              confirmLabel
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
