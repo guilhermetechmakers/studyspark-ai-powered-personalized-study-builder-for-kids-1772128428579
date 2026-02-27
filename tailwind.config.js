@@ -67,9 +67,9 @@ export default {
         '3xl': '1.75rem',
       },
       boxShadow: {
-        card: '0 2px 8px rgba(0, 0, 0, 0.08)',
-        'card-hover': '0 8px 24px rgba(0, 0, 0, 0.12)',
-        glow: '0 0 20px rgba(255, 173, 90, 0.3)',
+        card: 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
+        glow: 'var(--shadow-glow)',
       },
       keyframes: {
         'fade-in': {

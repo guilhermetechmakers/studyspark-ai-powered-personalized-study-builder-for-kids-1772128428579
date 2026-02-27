@@ -36,6 +36,11 @@
     --text-heading: 35 35 35;
     --text-body: 108 108 108;
 
+    /* Shadow tokens (design system) */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-glow: 0 0 20px rgb(var(--tangerine) / 0.3);
+
     /* Status UI tokens (toast variants) */
     --success: 134 239 172;
     --success-foreground: 22 101 52;
@@ -46,6 +51,9 @@
   }
 
   .dark {
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-glow: 0 0 20px rgb(var(--tangerine) / 0.2);
     --background: 23 23 28;
     --foreground: 248 248 251;
     --card: 35 35 42;
