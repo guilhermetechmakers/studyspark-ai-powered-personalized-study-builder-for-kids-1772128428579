@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle2, Download, Mail, Copy } from 'lucide-react'
+import { CheckCircle2, Download, Mail, Copy, Loader2, Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { toast } from 'sonner'
@@ -72,17 +72,19 @@ export function ConfirmationPanel({
     }
   }
 
+  const isEmpty = items.length === 0 && downloadLinks.length === 0
+
   return (
     <Card
       className={cn(
-        'overflow-hidden border-2 border-green-500/30 bg-gradient-to-br from-green-50 to-[rgb(var(--peach-light))]/30 dark:from-green-950/20 dark:to-[rgb(var(--peach-light))]/10',
+        'overflow-hidden border-2 border-success/30 bg-gradient-to-br from-[rgb(var(--success))]/10 to-[rgb(var(--peach-light))]/30 dark:from-[rgb(var(--success))]/5 dark:to-[rgb(var(--peach-light))]/10',
         className
       )}
     >
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
-            <CheckCircle2 className="h-7 w-7 text-green-600" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
+            <CheckCircle2 className="h-7 w-7 text-success-foreground" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground">Thank you!</h2>
@@ -139,9 +141,25 @@ export function ConfirmationPanel({
         )}
 
         {downloadLinks.length === 0 && items.length > 0 && (
-          <div className="rounded-xl border border-dashed border-muted-foreground/30 bg-muted/30 p-4 text-center">
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center">
             <p className="text-sm text-muted-foreground">
               Your export files are being prepared. You will receive download links via email.
+            </p>
+          </div>
+        )}
+
+        {isEmpty && (
+          <div
+            className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 px-6 py-10 text-center"
+            role="status"
+            aria-label="Order summary empty"
+          >
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <Inbox className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-semibold text-foreground">No items in this order</h3>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              Your order was confirmed successfully. Check your email for details.
             </p>
           </div>
         )}
@@ -152,8 +170,14 @@ export function ConfirmationPanel({
             className="w-full rounded-full"
             onClick={onEmailReceipt}
             disabled={isEmailing}
+            aria-busy={isEmailing}
+            aria-label={isEmailing ? 'Sending receipt' : 'Email receipt'}
           >
-            <Mail className="mr-2 h-4 w-4" />
+            {isEmailing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Mail className="mr-2 h-4 w-4" />
+            )}
             {isEmailing ? 'Sending…' : 'Email receipt'}
           </Button>
         )}
