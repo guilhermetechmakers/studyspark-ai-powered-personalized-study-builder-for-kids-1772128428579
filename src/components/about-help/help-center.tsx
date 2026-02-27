@@ -131,7 +131,7 @@ export function HelpCenter() {
     <section className="space-y-6" aria-labelledby="help-heading">
       <div>
         <h2 id="help-heading" className="flex items-center gap-2 text-xl font-bold text-foreground">
-          <BookOpen className="h-6 w-6 text-primary" />
+          <BookOpen className="h-6 w-6 shrink-0 text-primary" aria-hidden />
           Help Center
         </h2>
         <p className="mt-1 text-muted-foreground">
@@ -141,7 +141,7 @@ export function HelpCenter() {
 
       {/* Search bar */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 shrink-0 text-muted-foreground" aria-hidden />
         <Input
           placeholder="Search help articles..."
           value={searchQuery}
@@ -193,7 +193,7 @@ export function HelpCenter() {
       ) : (filteredArticles ?? []).length === 0 ? (
         <Card className="rounded-2xl">
           <CardContent className="flex flex-col items-center gap-4 p-8">
-            <BookOpen className="h-12 w-12 text-muted-foreground" />
+            <BookOpen className="h-12 w-12 shrink-0 text-muted-foreground" aria-hidden />
             <p className="text-center text-muted-foreground">
               No articles found. Try a different search or category.
             </p>

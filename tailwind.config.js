@@ -50,6 +50,14 @@ export default {
           DEFAULT: 'rgb(var(--muted))',
           foreground: 'rgb(var(--muted-foreground))',
         },
+        /* StudySpark brand tokens for gradients and accents */
+        peach: {
+          light: 'rgb(var(--peach-light) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--peach) / <alpha-value>)',
+        },
+        lavender: 'rgb(var(--lavender) / <alpha-value>)',
+        tangerine: 'rgb(var(--tangerine) / <alpha-value>)',
+        violet: 'rgb(var(--violet) / <alpha-value>)',
         card: {
           DEFAULT: 'rgb(var(--card))',
           foreground: 'rgb(var(--card-foreground))',

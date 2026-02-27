@@ -20,14 +20,14 @@ export function FeedbackCommunityLink() {
         className={cn(
           'rounded-2xl overflow-hidden transition-all duration-200',
           'hover:shadow-card-hover hover:-translate-y-0.5',
-          'bg-gradient-to-br from-[rgb(var(--peach-light))]/50 to-[rgb(var(--lavender))]/30'
+          'bg-gradient-to-br from-peach-light/50 to-lavender/30'
         )}
       >
         <CardContent className="p-6">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                <MessageCircle className="h-6 w-6 text-primary" />
+                <MessageCircle className="h-6 w-6 shrink-0 text-primary" aria-hidden />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">
@@ -51,7 +51,7 @@ export function FeedbackCommunityLink() {
                   className="inline-flex items-center gap-2"
                 >
                   Feedback Form
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
                 </a>
               </Button>
               <Button
@@ -66,7 +66,7 @@ export function FeedbackCommunityLink() {
                   className="inline-flex items-center gap-2"
                 >
                   Community Forum
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
                 </a>
               </Button>
             </div>

@@ -37,14 +37,14 @@ function VideoCard({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[rgb(var(--lavender))]/20 to-[rgb(var(--tangerine))]/20">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-lavender/20 to-tangerine/20">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-card/90 shadow-card transition-transform group-hover:scale-110">
-              <Play className="h-8 w-8 text-primary" aria-hidden />
+              <Play className="h-8 w-8 shrink-0 text-primary" aria-hidden />
             </div>
           </div>
         )}
         <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-foreground/80 px-2 py-1 text-xs text-primary-foreground">
-          <Clock className="h-3 w-3" aria-hidden />
+          <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
           {tutorial.duration}
         </div>
       </div>
@@ -119,11 +119,11 @@ export function TutorialsGallery() {
         >
           <CardContent className="flex flex-col items-center gap-6 p-8 md:p-12">
             <div
-              className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[rgb(var(--peach))] to-[rgb(var(--tangerine))] text-primary-foreground shadow-card"
+              className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-peach to-tangerine text-primary-foreground shadow-card"
               role="img"
               aria-label="Video tutorial placeholder"
             >
-              <Play className="h-10 w-10" aria-hidden />
+              <Play className="h-10 w-10 shrink-0" aria-hidden />
             </div>
             <div className="space-y-2 text-center">
               <h3 className="text-lg font-semibold text-foreground">
@@ -140,7 +140,7 @@ export function TutorialsGallery() {
                 className="gap-2"
                 aria-label="Try loading tutorials again"
               >
-                <RefreshCw className="h-4 w-4" aria-hidden />
+                <RefreshCw className="h-4 w-4 shrink-0" aria-hidden />
                 Try again
               </Button>
               <Button asChild variant="outline" className="gap-2">

@@ -14,6 +14,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
+const ICON_SIZE = 'h-5 w-5'
+
 export function AboutHelpPage() {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
@@ -29,9 +31,12 @@ export function AboutHelpPage() {
       <LandingHeader />
       <main className="flex-1">
         <div className="container py-12 md:py-16">
-          <form onSubmit={handleSearch} className="mx-auto mb-8 max-w-2xl">
-            <div className="flex gap-2 rounded-full border-2 border-border bg-card shadow-sm focus-within:border-[rgb(var(--tangerine))] focus-within:ring-2 focus-within:ring-[rgb(var(--tangerine))]/20">
-              <Search className="ml-4 h-5 w-5 shrink-0 self-center text-muted-foreground" />
+          <h1 className="mb-6 text-center text-2xl font-bold text-foreground md:text-3xl">
+            About & Help
+          </h1>
+          <form onSubmit={handleSearch} className="mx-auto mb-8 max-w-2xl" role="search" aria-label="Search help and studies">
+            <div className="flex gap-2 rounded-full border-2 border-border bg-card shadow-sm transition-all focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+              <Search className={`ml-4 ${ICON_SIZE} shrink-0 self-center text-muted-foreground`} aria-hidden />
               <Input
                 type="search"
                 placeholder="Search help docs, studies..."
@@ -46,27 +51,27 @@ export function AboutHelpPage() {
             </div>
           </form>
           <div className="mx-auto max-w-4xl space-y-16">
-            <section id="about" aria-label="About StudySpark">
+            <section id="about" aria-labelledby="about-heading">
               <AboutHeroSection />
             </section>
 
-            <section id="help-center" aria-label="Help Center">
+            <section id="help-center" aria-labelledby="help-heading">
               <HelpCenter />
             </section>
 
-            <section id="tutorials" aria-label="Tutorial Videos">
+            <section id="tutorials" aria-labelledby="tutorials-heading">
               <TutorialsGallery />
             </section>
 
-            <section id="onboarding" aria-label="Onboarding Guides">
+            <section id="onboarding" aria-labelledby="guides-heading">
               <OnboardingGuides />
             </section>
 
-            <section id="support" aria-label="Contact Support">
+            <section id="support" aria-labelledby="support-heading">
               <SupportForm />
             </section>
 
-            <section id="feedback" aria-label="Feedback and Community">
+            <section id="feedback" aria-labelledby="feedback-heading">
               <FeedbackCommunityLink />
             </section>
           </div>

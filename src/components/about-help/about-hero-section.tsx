@@ -13,20 +13,20 @@ const socialLinks = [
 export function AboutHeroSection() {
   return (
     <section
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[rgb(var(--peach-light))] via-[rgb(var(--peach))]/80 to-[rgb(var(--lavender))]/30 p-8 md:p-12"
+      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-peach-light via-peach/80 to-lavender/30 p-8 md:p-12"
       aria-labelledby="about-heading"
     >
       <div className="relative z-10">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/90 shadow-card">
-                <Sparkles className="h-8 w-8 text-primary" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card/90 shadow-card">
+                <Sparkles className="h-7 w-7 text-primary" aria-hidden />
               </div>
               <div>
-                <h1 id="about-heading" className="text-2xl font-bold text-foreground md:text-3xl">
+                <h2 id="about-heading" className="text-2xl font-bold text-foreground md:text-3xl">
                   About StudySpark
-                </h1>
+                </h2>
                 <p className="text-sm text-muted-foreground">AI-powered learning for every child</p>
               </div>
             </div>
@@ -43,16 +43,16 @@ export function AboutHeroSection() {
             <div className="flex flex-wrap gap-4">
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
-                className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-foreground shadow-card transition-all hover:scale-[1.02] hover:shadow-card-hover"
+                className="inline-flex items-center gap-2 rounded-full bg-card/90 px-4 py-2 text-sm font-medium text-foreground shadow-card transition-all hover:scale-[1.02] hover:shadow-card-hover"
               >
-                <Mail className="h-4 w-4" />
+                <Mail className="h-4 w-4 shrink-0" aria-hidden />
                 {CONTACT_EMAIL}
               </a>
               <a
                 href={`tel:${CONTACT_PHONE.replace(/\s/g, '')}`}
-                className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-foreground shadow-card transition-all hover:scale-[1.02] hover:shadow-card-hover"
+                className="inline-flex items-center gap-2 rounded-full bg-card/90 px-4 py-2 text-sm font-medium text-foreground shadow-card transition-all hover:scale-[1.02] hover:shadow-card-hover"
               >
-                <Phone className="h-4 w-4" />
+                <Phone className="h-4 w-4 shrink-0" aria-hidden />
                 {CONTACT_PHONE}
               </a>
             </div>
@@ -63,10 +63,10 @@ export function AboutHeroSection() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white/90 text-muted-foreground transition-all hover:scale-[1.05] hover:border-primary hover:bg-primary/10 hover:text-primary"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground transition-all hover:scale-[1.05] hover:border-primary hover:bg-primary/10 hover:text-primary"
                   aria-label={label}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden />
                 </a>
               ))}
             </div>
@@ -79,8 +79,8 @@ export function AboutHeroSection() {
         </div>
       </div>
       {/* Decorative blobs */}
-      <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[rgb(var(--lavender))]/20" aria-hidden />
-      <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-[rgb(var(--tangerine))]/20" aria-hidden />
+      <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-lavender/20" aria-hidden />
+      <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-tangerine/20" aria-hidden />
     </section>
   )
 }

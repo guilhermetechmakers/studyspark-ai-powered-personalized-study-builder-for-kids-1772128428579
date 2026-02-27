@@ -134,10 +134,10 @@ export function SupportForm() {
 
   if (submitStatus === 'success') {
     return (
-      <Card className="rounded-2xl border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30">
+      <Card className="rounded-2xl border-success/30 bg-success/10">
         <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
-            <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-success/20">
+            <span className="text-2xl font-bold text-success-foreground" aria-hidden>
               ✓
             </span>
           </div>
@@ -275,7 +275,7 @@ export function SupportForm() {
                       'hover:bg-muted hover:border-primary/50'
                     )}
                   >
-                    <Paperclip className="h-4 w-4" />
+                    <Paperclip className="h-4 w-4 shrink-0" aria-hidden />
                     Add files (max 5MB each)
                   </span>
                 </label>
@@ -294,7 +294,7 @@ export function SupportForm() {
                         className="shrink-0 rounded p-1 hover:bg-muted"
                         aria-label={`Remove ${f.name}`}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4 shrink-0" aria-hidden />
                       </button>
                     </li>
                   ))}
@@ -309,7 +309,7 @@ export function SupportForm() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
                   Submitting...
                 </>
               ) : (

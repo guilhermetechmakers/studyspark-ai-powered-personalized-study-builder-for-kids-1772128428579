@@ -33,9 +33,9 @@ function GuideStepItem({
           <span className="font-medium text-foreground">{step.title}</span>
         </span>
         {expanded ? (
-          <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         ) : (
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         )}
       </button>
       {expanded && (
@@ -43,7 +43,7 @@ function GuideStepItem({
           <p className="text-sm text-muted-foreground">{step.content}</p>
           {step.tip && (
             <div className="mt-3 flex gap-2 rounded-xl bg-accent/10 p-3">
-              <Lightbulb className="h-4 w-4 shrink-0 text-accent" />
+              <Lightbulb className="h-4 w-4 shrink-0 text-accent" aria-hidden />
               <p className="text-sm text-foreground">
                 <span className="font-medium">Tip:</span> {step.tip}
               </p>
@@ -110,7 +110,7 @@ function GuideCard({ guide }: { guide: Guide }) {
               onClick={handlePrint}
               aria-label="Print guide"
             >
-              <Printer className="h-4 w-4" />
+              <Printer className="h-4 w-4 shrink-0" aria-hidden />
             </Button>
             <Button
               variant="outline"
@@ -119,7 +119,7 @@ function GuideCard({ guide }: { guide: Guide }) {
               onClick={handleExport}
               aria-label="Export guide"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4 shrink-0" aria-hidden />
             </Button>
           </div>
         )}
