@@ -102,7 +102,6 @@ export function AuthContainer() {
 
   const handleOnboardingComplete = async (profiles: ChildProfile[]) => {
     await saveOnboardingChildren(profiles)
-    toast.success('Profiles saved!')
     setOnboardingOpen(false)
     navigate('/dashboard')
   }
