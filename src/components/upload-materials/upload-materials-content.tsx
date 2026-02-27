@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { FileUp, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { UploadArea } from './upload-area'
 import { FileCard } from './file-card'
 import { OCRPanel } from './ocr-panel'
@@ -61,6 +63,7 @@ export function UploadMaterialsContent({
     safeFiles[0]?.id ?? null
   )
   const [errors, setErrors] = useState<ValidationError[]>([])
+  const [isSaving, setIsSaving] = useState(false)
 
   const allFiles = onFilesChange ? safeFiles : localFiles
   const setFiles = useCallback(
@@ -90,6 +93,13 @@ export function UploadMaterialsContent({
     () => (allSnippets ?? []).filter((s) => s?.important === true),
     [allSnippets]
   )
+
+  const isUploading = useMemo(
+    () => (allFiles ?? []).some((f) => f?.ocrStatus === 'in_progress'),
+    [allFiles]
+  )
+
+  const hasFiles = (allFiles ?? []).length > 0
 
   const handleFileAdd = useCallback(
     async (newFiles: File[]) => {
@@ -284,28 +294,35 @@ export function UploadMaterialsContent({
       return
     }
 
+    setIsSaving(true)
     const filesToSave = allFiles ?? []
-    for (const f of filesToSave) {
-      if (!f.id.startsWith('temp-') && (f.ocrSnippets ?? []).length > 0) {
-        const correctedText = (f.ocrSnippets ?? [])
-          .map((s) => s?.text ?? '')
-          .filter(Boolean)
-          .join(' ')
-        if (correctedText) {
-          try {
-            await saveCorrections(f.id, correctedText)
-          } catch {
-            // Non-blocking
+    try {
+      for (const f of filesToSave) {
+        if (!f.id.startsWith('temp-') && (f.ocrSnippets ?? []).length > 0) {
+          const correctedText = (f.ocrSnippets ?? [])
+            .map((s) => s?.text ?? '')
+            .filter(Boolean)
+            .join(' ')
+          if (correctedText) {
+            try {
+              await saveCorrections(f.id, correctedText)
+            } catch {
+              // Non-blocking
+            }
           }
         }
       }
-    }
 
-    onSave?.({
-      files: filesToSave,
-      importantSnippets,
-    })
-    toast.success('Materials saved!')
+      onSave?.({
+        files: filesToSave,
+        importantSnippets,
+      })
+      if (!onSave) toast.success('Materials saved!')
+    } catch (err) {
+      toast.error((err as Error)?.message ?? 'Failed to save materials')
+    } finally {
+      setIsSaving(false)
+    }
   }, [allFiles, importantSnippets, onSave])
 
   return (
@@ -320,7 +337,7 @@ export function UploadMaterialsContent({
         </p>
       </div>
 
-      <Card className="overflow-hidden border-2 border-border/60 bg-gradient-to-br from-[rgb(var(--lavender))]/10 to-white">
+      <Card className="overflow-hidden border-2 border-border/60 bg-gradient-to-br from-[rgb(var(--lavender))]/10 to-card">
         <CardHeader>
           <CardTitle>Add files</CardTitle>
           <CardDescription>
@@ -333,11 +350,42 @@ export function UploadMaterialsContent({
         </CardContent>
       </Card>
 
+      {isUploading && (
+        <div
+          className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3"
+          role="status"
+          aria-live="polite"
+        >
+          <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" aria-hidden />
+          <p className="text-sm font-medium text-foreground">
+            Processing files… Text extraction in progress.
+          </p>
+        </div>
+      )}
+
       <ValidationSummary errors={errors} />
 
-      {(allFiles ?? []).length > 0 && (
+      {!hasFiles && (
+        <Card className="overflow-hidden border-2 border-dashed border-border/60 bg-muted/30">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+              <FileUp className="h-8 w-8 text-primary" aria-hidden />
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-foreground">No files yet</h3>
+            <p className="mb-6 max-w-sm text-sm text-muted-foreground">
+              Upload your first document or image above to get started. We&apos;ll extract text and
+              help you mark important snippets for AI-generated study materials.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Supported: JPG, PNG, PDF, DOCX (up to 25MB each)
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {hasFiles && (
         <>
-          <Card className="overflow-hidden border-2 border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/10 to-white">
+          <Card className="overflow-hidden border-2 border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/10 to-card">
             <CardHeader>
               <CardTitle>Uploaded files</CardTitle>
               <CardDescription>
@@ -387,7 +435,7 @@ export function UploadMaterialsContent({
             </Card>
           )}
 
-          <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-white">
+          <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-card">
             <CardHeader>
               <CardTitle>AI context</CardTitle>
               <CardDescription>
@@ -405,13 +453,22 @@ export function UploadMaterialsContent({
 
           {onSave && (
             <div className="flex justify-end">
-              <button
+              <Button
                 type="button"
                 onClick={handleSave}
-                className="rounded-full bg-primary px-6 py-2.5 font-medium text-primary-foreground shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                disabled={isSaving}
+                aria-busy={isSaving}
+                aria-label={isSaving ? 'Saving materials…' : 'Save and continue'}
               >
-                Save & continue
-              </button>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    Saving…
+                  </>
+                ) : (
+                  'Save & continue'
+                )}
+              </Button>
             </div>
           )}
         </>

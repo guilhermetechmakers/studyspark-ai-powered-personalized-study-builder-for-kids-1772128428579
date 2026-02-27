@@ -73,7 +73,7 @@ function OcrStatusBadge({ status }: { status: OcrStatus }) {
     case 'completed':
     case 'corrected':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+        <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success-foreground">
           <Check className="h-3 w-3" />
           Complete
         </span>
@@ -125,7 +125,7 @@ export function FileCard({ file, onRemove, onRetryOcr, onPreview }: FileCardProp
         className={cn(
           'group overflow-hidden transition-all duration-300',
           'hover:shadow-card-hover hover:-translate-y-0.5',
-          'border-[rgb(var(--border))] bg-gradient-to-br from-white to-[rgb(var(--peach-light))]/5'
+          'border-border bg-gradient-to-br from-card to-[rgb(var(--peach-light))]/5'
         )}
       >
         <CardContent className="p-4">

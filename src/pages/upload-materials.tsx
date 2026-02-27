@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { UploadMaterialsContent } from '@/components/upload-materials'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft } from 'lucide-react'
@@ -14,6 +15,7 @@ export function UploadMaterialsPage() {
     const materials = (payload.files ?? []).map((f) => fileItemToMaterial(f))
     // In a full implementation, persist to backend and navigate to study wizard
     console.info('Saved materials:', { materials, importantSnippets: payload.importantSnippets })
+    toast.success('Materials saved! Redirecting to study builder…')
     navigate('/dashboard/create')
   }
 
@@ -26,8 +28,9 @@ export function UploadMaterialsPage() {
             size="sm"
             onClick={() => navigate(-1)}
             className="rounded-full"
+            aria-label="Go back to previous page"
           >
-            <ChevronLeft className="mr-1 h-4 w-4" />
+            <ChevronLeft className="mr-1 h-4 w-4" aria-hidden />
             Back
           </Button>
           <h1 className="text-lg font-semibold">Upload Materials</h1>
