@@ -3,15 +3,27 @@
  * Upload area, status dashboard, OCR progress.
  */
 
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChevronLeft, FileText, ArrowRight } from 'lucide-react'
+import { ChevronLeft, FileText, ArrowRight, Loader2 } from 'lucide-react'
 import { UploadDropzoneWithApi } from '@/components/file-upload/upload-dropzone-with-api'
+import { ErrorBanner } from '@/components/checkout/error-banner'
 import { cn } from '@/lib/utils'
 
 export function FileUploadOcrPage() {
   const navigate = useNavigate()
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+
+  const handleUploadingChange = useCallback((uploading: boolean) => {
+    setIsUploading(uploading)
+  }, [])
+
+  const handleUploadError = useCallback((message: string, fileName?: string) => {
+    setUploadError(fileName ? `${fileName}: ${message}` : message)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,8 +34,9 @@ export function FileUploadOcrPage() {
             size="sm"
             onClick={() => navigate(-1)}
             className="rounded-full"
+            aria-label="Go back to previous page"
           >
-            <ChevronLeft className="mr-1 h-4 w-4" />
+            <ChevronLeft className="mr-1 h-4 w-4" aria-hidden />
             Back
           </Button>
           <h1 className="text-lg font-semibold">Upload & OCR</h1>
@@ -42,15 +55,35 @@ export function FileUploadOcrPage() {
             </p>
           </div>
 
+          {uploadError && (
+            <ErrorBanner
+              message={uploadError}
+              onDismiss={() => setUploadError(null)}
+            />
+          )}
+
+          {isUploading && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex items-center gap-3 rounded-2xl border-2 border-primary/20 bg-primary/5 px-4 py-3"
+            >
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" aria-hidden />
+              <p className="text-sm font-medium text-foreground">
+                Uploading files... Please wait while your documents are processed.
+              </p>
+            </div>
+          )}
+
           <Card
             className={cn(
-              'overflow-hidden border-2 border-border/60',
-              'bg-gradient-to-br from-[rgb(var(--lavender))]/10 to-white'
+              'overflow-hidden rounded-2xl border-2 border-border/60',
+              'bg-gradient-to-br from-[rgb(var(--lavender))]/10 to-card'
             )}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
+                <FileText className="h-5 w-5 text-primary" aria-hidden />
                 Add files
               </CardTitle>
               <CardDescription>
@@ -65,11 +98,13 @@ export function FileUploadOcrPage() {
                     navigate(`/dashboard/files/${file.id}/correct`)
                   }
                 }}
+                onUploadingChange={handleUploadingChange}
+                onUploadError={handleUploadError}
               />
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-white">
+          <Card className="overflow-hidden rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-card">
             <CardHeader>
               <CardTitle>What happens next?</CardTitle>
               <CardDescription>
@@ -117,9 +152,10 @@ export function FileUploadOcrPage() {
                 variant="outline"
                 className="w-full rounded-full"
                 onClick={() => navigate('/dashboard/files')}
+                aria-label="View all uploaded files in dashboard"
               >
                 View all files
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
               </Button>
             </CardContent>
           </Card>

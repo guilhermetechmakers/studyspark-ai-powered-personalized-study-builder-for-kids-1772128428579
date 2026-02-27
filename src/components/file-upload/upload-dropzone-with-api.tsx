@@ -38,6 +38,8 @@ export interface UploadedFileItem {
 
 export interface UploadDropzoneWithApiProps {
   onFileUploaded?: (file: UploadedFileItem) => void
+  onUploadingChange?: (uploading: boolean) => void
+  onUploadError?: (message: string, fileName?: string) => void
   relatedStudyId?: string
   className?: string
 }
@@ -58,6 +60,8 @@ function validateFile(file: File): string | null {
 
 export function UploadDropzoneWithApi({
   onFileUploaded,
+  onUploadingChange,
+  onUploadError,
   relatedStudyId,
   className,
 }: UploadDropzoneWithApiProps) {
@@ -82,6 +86,7 @@ export function UploadDropzoneWithApi({
       if (valid.length === 0) return
 
       setUploading(true)
+      onUploadingChange?.(true)
 
       for (const file of valid) {
         const tempId = `temp-${Date.now()}-${file.name}`
@@ -182,12 +187,14 @@ export function UploadDropzoneWithApi({
             )
           )
           toast.error(`${file.name}: ${msg}`)
+          onUploadError?.(msg, file.name)
         }
       }
 
       setUploading(false)
+      onUploadingChange?.(false)
     },
-    [relatedStudyId, onFileUploaded]
+    [relatedStudyId, onFileUploaded, onUploadingChange, onUploadError]
   )
 
   const handleDrop = useCallback(
@@ -269,10 +276,12 @@ export function UploadDropzoneWithApi({
           onClick={handleBrowseClick}
           className="rounded-full"
           disabled={uploading}
+          aria-label={uploading ? 'Upload in progress, please wait' : 'Browse and select files to upload'}
+          aria-busy={uploading}
         >
           {uploading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
               Uploading...
             </>
           ) : (
@@ -291,7 +300,11 @@ export function UploadDropzoneWithApi({
       </div>
 
       {errors.length > 0 && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2">
+        <div
+          role="alert"
+          aria-live="polite"
+          className="rounded-2xl border-2 border-destructive/30 bg-destructive/5 px-4 py-3"
+        >
           <p className="text-sm font-medium text-destructive">Validation issues:</p>
           <ul className="mt-1 list-inside list-disc text-sm text-destructive/90">
             {errors.map((msg, i) => (
@@ -302,37 +315,41 @@ export function UploadDropzoneWithApi({
       )}
 
       {files.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3" role="region" aria-label="Upload progress">
           <p className="text-sm font-medium text-foreground">Upload progress</p>
           {(files ?? []).map((f) => (
             <div
               key={f.id}
-              className="rounded-xl border border-border bg-card p-4 shadow-sm"
+              className="rounded-2xl border border-border bg-card p-4 shadow-card"
+              role="status"
+              aria-label={`${f.name}: ${f.ocrStatus === 'completed' ? 'Upload complete' : f.ocrStatus === 'failed' ? `Failed - ${f.error ?? 'Unknown error'}` : f.ocrStatus === 'in_progress' ? 'Processing' : 'Pending'}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate font-medium text-foreground">{f.name}</span>
                 {f.ocrStatus === 'completed' && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-700">
-                    <Check className="h-3 w-3" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success/20 px-2 py-0.5 text-xs font-medium text-success-foreground">
+                    <Check className="h-3 w-3" aria-hidden />
                     Done
                   </span>
                 )}
                 {f.ocrStatus === 'in_progress' && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
                     OCR
                   </span>
                 )}
                 {f.ocrStatus === 'failed' && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                    <AlertCircle className="h-3 w-3" />
+                    <AlertCircle className="h-3 w-3" aria-hidden />
                     Failed
                   </span>
                 )}
               </div>
               <Progress value={f.progress} className="mt-2 h-2" />
               {f.error && (
-                <p className="mt-2 text-xs text-destructive">{f.error}</p>
+                <p className="mt-2 text-xs text-destructive" role="alert">
+                  {f.error}
+                </p>
               )}
             </div>
           ))}
