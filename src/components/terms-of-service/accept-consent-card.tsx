@@ -1,12 +1,15 @@
 /**
  * AcceptConsentCard - Prominent container for ToS acceptance during onboarding.
  * Includes Accept button and optional Decline/Cancel action.
+ * Uses shadcn/ui components with loading states and accessibility.
  */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 export interface AcceptConsentCardProps {
@@ -59,18 +62,25 @@ export function AcceptConsentCard({
       </CardHeader>
       <CardContent className="space-y-4">
         {requireScrollToBottom && (
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-3 space-y-0">
+            <Checkbox
+              id="tos-agree"
               checked={hasScrolledToBottom}
-              onChange={(e) => setHasScrolledToBottom(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onCheckedChange={(checked) =>
+                setHasScrolledToBottom(checked === true)
+              }
               aria-describedby="scroll-requirement-desc"
+              disabled={isSubmitting || isLoading}
+              className="rounded"
             />
-            <span id="scroll-requirement-desc" className="text-sm text-muted-foreground">
+            <Label
+              htmlFor="tos-agree"
+              id="scroll-requirement-desc"
+              className="text-sm text-muted-foreground cursor-pointer font-normal"
+            >
               I have read and agree to the Terms of Service
-            </span>
-          </label>
+            </Label>
+          </div>
         )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <Button
@@ -81,8 +91,11 @@ export function AcceptConsentCard({
             aria-label="Accept Terms of Service"
           >
             {isSubmitting || isLoading ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-pulse rounded-full bg-current" />
+              <span className="flex items-center gap-2" aria-live="polite">
+                <Loader2
+                  className="h-5 w-5 animate-spin"
+                  aria-hidden
+                />
                 Accepting...
               </span>
             ) : (
@@ -107,6 +120,7 @@ export function AcceptConsentCard({
           <Link
             to="/terms-of-service"
             className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+            aria-label="Read full terms of service in a new view"
           >
             Read full terms
           </Link>
