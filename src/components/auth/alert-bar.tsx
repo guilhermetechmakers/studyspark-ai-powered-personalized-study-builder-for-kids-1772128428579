@@ -32,7 +32,7 @@ export function AlertBar({
       className={cn(
         'flex items-center gap-3 rounded-xl border px-4 py-3 text-sm',
         isError && 'border-destructive/50 bg-destructive/10 text-destructive',
-        isSuccess && 'border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400',
+        isSuccess && 'border-success/50 bg-success/10 text-success-foreground',
         resolvedVariant === 'info' && 'border-primary/50 bg-primary/10 text-primary',
         className
       )}
