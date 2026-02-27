@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface ConfirmationDialogProps {
@@ -37,23 +38,50 @@ export function ConfirmationDialog({
     onOpenChange(false)
   }
 
+  const confirmAriaLabel =
+    variant === 'destructive'
+      ? `${confirmLabel} (destructive action)`
+      : confirmLabel
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        aria-describedby={description ? 'confirmation-dialog-description' : undefined}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          {description && (
+            <DialogDescription id="confirmation-dialog-description">
+              {description}
+            </DialogDescription>
+          )}
         </DialogHeader>
         <DialogFooter className={cn('gap-2 sm:gap-0')}>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            aria-label={cancelLabel}
+          >
             {cancelLabel}
           </Button>
           <Button
             variant={variant === 'destructive' ? 'destructive' : 'default'}
             onClick={handleConfirm}
             disabled={isLoading}
+            aria-label={confirmAriaLabel}
+            aria-busy={isLoading}
+            className="min-w-[7rem]"
           >
-            {isLoading ? 'Processing...' : confirmLabel}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                <span>Processing...</span>
+              </>
+            ) : (
+              confirmLabel
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
