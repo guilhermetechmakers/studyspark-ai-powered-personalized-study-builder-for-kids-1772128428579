@@ -12,6 +12,7 @@ export interface FileUploadCardProps {
   file: FileMeta
   uploadProgress?: number
   isUploading?: boolean
+  isDeleting?: boolean
   onDownload?: (id: string) => void
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -45,6 +46,7 @@ export function FileUploadCard({
   file,
   uploadProgress = 100,
   isUploading = false,
+  isDeleting = false,
   onDownload,
   onEdit,
   onDelete,
@@ -106,9 +108,9 @@ export function FileUploadCard({
               size="icon"
               onClick={() => onDownload(file.id)}
               className="h-9 w-9 rounded-full"
-              aria-label="Download"
+              aria-label={`Download ${file.filename ?? 'file'}`}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4" aria-hidden />
             </Button>
           )}
           {onEdit && isComplete && (
@@ -117,20 +119,25 @@ export function FileUploadCard({
               size="icon"
               onClick={() => onEdit(file.id)}
               className="h-9 w-9 rounded-full"
-              aria-label="Edit OCR"
+              aria-label={`Edit OCR for ${file.filename ?? 'file'}`}
             >
-              <Edit3 className="h-4 w-4" />
+              <Edit3 className="h-4 w-4" aria-hidden />
             </Button>
           )}
           {onDelete && (
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onDelete(file.id)}
+              onClick={() => !isDeleting && onDelete(file.id)}
+              disabled={isDeleting}
               className="h-9 w-9 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-              aria-label="Delete"
+              aria-label={isDeleting ? 'Deleting file, please wait' : `Delete ${file.filename ?? 'file'}`}
             >
-              <Trash2 className="h-4 w-4" />
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              ) : (
+                <Trash2 className="h-4 w-4" aria-hidden />
+              )}
             </Button>
           )}
         </div>

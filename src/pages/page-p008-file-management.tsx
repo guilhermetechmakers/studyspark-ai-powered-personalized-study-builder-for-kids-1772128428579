@@ -3,8 +3,8 @@
  * Filters, search, share and permissions, integration with study creation.
  */
 
-import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Upload, FileText } from 'lucide-react'
+import { Search, Upload, FileText, FilterX } from 'lucide-react'
 import { searchFiles, listFiles, getDownloadUrl, deleteFile } from '@/api/files'
 import type { UploadedFile } from '@/types/files'
 import { dataGuard } from '@/lib/data-guard'
@@ -34,16 +34,28 @@ const OCR_STATUS_OPTIONS: { value: string; label: string }[] = [
 
 export function PageP008FileManagement() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [ocrStatusFilter, setOcrStatusFilter] = useState<string>('')
+  const hasShownUploadToast = useRef(false)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 300)
     return () => clearTimeout(t)
   }, [query])
+
+  useEffect(() => {
+    const state = location.state as { uploaded?: boolean } | null
+    if (state?.uploaded && !hasShownUploadToast.current) {
+      hasShownUploadToast.current = true
+      toast.success('Files uploaded successfully. OCR processing has started.')
+      navigate(location.pathname, { replace: true })
+    }
+  }, [location.state, location.pathname, navigate])
 
   const fetchFiles = useCallback(async () => {
     setLoading(true)
@@ -93,6 +105,7 @@ export function PageP008FileManagement() {
   const handleDelete = useCallback(
     async (id: string) => {
       if (!window.confirm('Delete this file?')) return
+      setDeletingId(id)
       try {
         const res = await deleteFile(id)
         if (res?.ok) {
@@ -103,10 +116,17 @@ export function PageP008FileManagement() {
         }
       } catch {
         toast.error('Delete failed')
+      } finally {
+        setDeletingId(null)
       }
     },
     []
   )
+
+  const handleClearFilters = useCallback(() => {
+    setQuery('')
+    setOcrStatusFilter('')
+  }, [])
 
   const safeFiles = dataGuard(files)
 
@@ -125,8 +145,9 @@ export function PageP008FileManagement() {
           <Button
             className="rounded-full"
             onClick={() => navigate('/dashboard/upload-ocr')}
+            aria-label="Upload new files to manage"
           >
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload className="mr-2 h-4 w-4" aria-hidden />
             Upload files
           </Button>
         </div>
@@ -141,16 +162,17 @@ export function PageP008FileManagement() {
           <CardContent>
             <div className="flex flex-col gap-4 sm:flex-row">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                 <Input
                   placeholder="Search files..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-10 rounded-xl"
+                  aria-label="Search files by filename or OCR text"
                 />
               </div>
               <Select value={ocrStatusFilter} onValueChange={setOcrStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48 rounded-xl">
+                <SelectTrigger className="w-full sm:w-48 rounded-xl" aria-label="Filter by OCR status">
                   <SelectValue placeholder="OCR status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -165,7 +187,7 @@ export function PageP008FileManagement() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-2 border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/10 to-white">
+        <Card className="overflow-hidden border-2 border-border/60 bg-gradient-to-br from-[rgb(var(--peach-light))]/10 to-card">
           <CardHeader>
             <CardTitle>Your files</CardTitle>
             <CardDescription>
@@ -181,23 +203,35 @@ export function PageP008FileManagement() {
               </div>
             ) : safeFiles.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border py-16 text-center">
-                <FileText className="mb-4 h-16 w-16 text-muted-foreground/50" />
+                <FileText className="mb-4 h-16 w-16 text-muted-foreground/50" aria-hidden />
                 <p className="font-medium text-muted-foreground">No files found</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {debouncedQuery || ocrStatusFilter
                     ? 'Try adjusting your search or filters.'
                     : 'Upload files to get started.'}
                 </p>
-                {!debouncedQuery && !ocrStatusFilter && (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                  {(debouncedQuery || ocrStatusFilter) && (
+                    <Button
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={handleClearFilters}
+                      aria-label="Clear search and filters"
+                    >
+                      <FilterX className="mr-2 h-4 w-4" aria-hidden />
+                      Clear filters
+                    </Button>
+                  )}
                   <Button
-                    variant="outline"
-                    className="mt-4 rounded-full"
+                    variant={debouncedQuery || ocrStatusFilter ? 'outline' : 'default'}
+                    className="rounded-full"
                     onClick={() => navigate('/dashboard/upload-ocr')}
+                    aria-label="Upload new files"
                   >
-                    <Upload className="mr-2 h-4 w-4" />
+                    <Upload className="mr-2 h-4 w-4" aria-hidden />
                     Upload files
                   </Button>
-                )}
+                </div>
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
@@ -208,6 +242,7 @@ export function PageP008FileManagement() {
                     onDownload={handleDownload}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    isDeleting={deletingId === file.id}
                   />
                 ))}
               </div>

@@ -191,10 +191,15 @@ export function PageP006UploadOcr() {
           <Button
             variant="default"
             className="rounded-full"
-            onClick={() => navigate('/dashboard/files')}
+            onClick={() =>
+              navigate('/dashboard/files', {
+                state: uploadedIds.length > 0 ? { uploaded: true } : undefined,
+              })
+            }
+            aria-label="Go to file management to view all uploaded files"
           >
             Manage files
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
           </Button>
         </div>
       </div>
