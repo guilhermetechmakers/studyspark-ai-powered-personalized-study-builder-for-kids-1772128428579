@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ChevronDown, ChevronUp, ShoppingBag } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Accordion,
   AccordionContent,
@@ -19,6 +21,10 @@ export interface OrderSummaryCardProps {
   currency?: string
   promoCode?: string
   className?: string
+  /** Optional href for empty state CTA. Defaults to /dashboard/studies */
+  emptyStateCtaHref?: string
+  /** Optional label for empty state CTA. Defaults to "Browse studies" */
+  emptyStateCtaLabel?: string
 }
 
 function formatCurrency(amount: number, currency = 'USD'): string {
@@ -37,6 +43,8 @@ export function OrderSummaryCard({
   currency = 'USD',
   promoCode,
   className,
+  emptyStateCtaHref = '/dashboard/studies',
+  emptyStateCtaLabel = 'Browse studies',
 }: OrderSummaryCardProps) {
   const [expanded, setExpanded] = useState(true)
   const safeItems = Array.isArray(items) ? items : []
@@ -44,7 +52,7 @@ export function OrderSummaryCard({
   return (
     <Card
       className={cn(
-        'overflow-hidden bg-gradient-to-br from-[rgb(var(--peach-light))]/30 to-[rgb(var(--lavender))]/10',
+        'overflow-hidden rounded-xl bg-gradient-to-br from-card to-muted/60 shadow-card',
         className
       )}
     >
@@ -99,9 +107,29 @@ export function OrderSummaryCard({
                 </AccordionItem>
               </Accordion>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No items selected
-              </p>
+              <div
+                className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border bg-muted/30 px-6 py-8 text-center"
+                role="status"
+                aria-label="Order summary empty"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <ShoppingBag className="h-6 w-6 text-muted-foreground" aria-hidden />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    No items in your cart
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Add study sets from your library to get started
+                  </p>
+                </div>
+                <Button asChild variant="default" size="default" className="rounded-full">
+                  <Link to={emptyStateCtaHref}>
+                    <ShoppingBag className="h-4 w-4" aria-hidden />
+                    {emptyStateCtaLabel}
+                  </Link>
+                </Button>
+              </div>
             )}
 
             <div className="space-y-2 border-t border-border pt-4">
@@ -110,7 +138,7 @@ export function OrderSummaryCard({
                 <span>{formatCurrency(subtotal, currency)}</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
+                <div className="flex justify-between text-sm text-success-foreground">
                   <span>
                     Discount{promoCode ? ` (${promoCode})` : ''}
                   </span>
