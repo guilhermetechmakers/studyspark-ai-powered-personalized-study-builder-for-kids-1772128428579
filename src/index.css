@@ -101,6 +101,11 @@
 }
 
 @layer utilities {
+  /* Ensures modal content is centered; used with flex overlay */
+  .centered-modal {
+    flex-shrink: 0;
+  }
+
   .animate-stagger > * {
     animation: fade-in-up 0.4s ease-out forwards;
   }

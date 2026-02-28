@@ -84,6 +84,11 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        /* Dialog-specific: opacity only to preserve centering transform */
+        'dialog-fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
         'fade-in-up': {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
@@ -169,6 +174,7 @@ export default {
       animation: {
         'fade-in': 'fade-in 0.3s ease-out forwards',
         'fade-in-up': 'fade-in-up 0.4s ease-out forwards',
+        'dialog-fade-in': 'dialog-fade-in 0.2s ease-out forwards',
         'slide-in-right': 'slide-in-right 0.3s ease-out forwards',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
