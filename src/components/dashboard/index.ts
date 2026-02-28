@@ -1,5 +1,6 @@
 export { DashboardShell } from './dashboard-shell'
 export { TopNav } from './top-nav'
+export { DashboardOverviewMetrics } from './dashboard-overview-metrics'
 export { ProgressOverviewGrid } from './progress-overview-grid'
 export { RecentStudiesList } from './recent-studies-list'
 export { QuickCreateCard } from './quick-create-card'

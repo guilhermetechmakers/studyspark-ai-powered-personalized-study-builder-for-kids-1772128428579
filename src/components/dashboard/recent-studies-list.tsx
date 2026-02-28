@@ -68,7 +68,7 @@ export function RecentStudiesList({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card data-testid="dashboard-studies" aria-busy="true" aria-label="Recent studies">
         <CardHeader>
           <Skeleton className="h-6 w-40" />
           <Skeleton className="h-4 w-48" />
@@ -86,13 +86,20 @@ export function RecentStudiesList({
 
   if (list.length === 0) {
     return (
-      <Card className="border-dashed border-2">
-        <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
+      <Card
+        data-testid="dashboard-studies"
+        className="border-dashed border-2"
+        aria-live="polite"
+      >
+        <CardContent
+          data-testid="empty-studies"
+          className="flex flex-col items-center justify-center gap-4 py-12"
+        >
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
             <BookOpen className="h-8 w-8 text-muted-foreground" />
           </div>
           <div className="text-center">
-            <h3 className="font-semibold text-foreground">No studies yet</h3>
+            <h3 className="font-semibold text-foreground">No studies found</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Create your first study to get started.
             </p>
@@ -106,7 +113,7 @@ export function RecentStudiesList({
   }
 
   return (
-    <Card>
+    <Card data-testid="dashboard-studies" aria-live="polite">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Recent Studies</CardTitle>

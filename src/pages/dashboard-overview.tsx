@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import {
   DashboardShell,
+  DashboardOverviewMetrics,
   ProgressOverviewGrid,
   RecentStudiesList,
   QuickCreateCard,
@@ -9,15 +10,20 @@ import {
   DashboardFooter,
 } from '@/components/dashboard'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
+import { Button } from '@/components/ui/button'
+import { AlertCircle } from 'lucide-react'
 import type { Study, Recommendation } from '@/types/dashboard'
 
 export function DashboardOverview() {
   const navigate = useNavigate()
   const {
+    overview,
     children,
     studies,
     recommendations,
     isLoading,
+    error,
+    refetch,
     setStudies,
     setRecommendations,
   } = useDashboardData()
@@ -57,6 +63,45 @@ export function DashboardOverview() {
           </p>
         </header>
 
+        {error && (
+          <section
+            className="animate-fade-in-up rounded-xl border border-destructive/50 bg-destructive/10 p-4"
+            role="alert"
+            aria-live="assertive"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
+                <div>
+                  <p className="font-medium text-foreground">
+                    Unable to load dashboard data
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{error}</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                aria-label="Retry loading dashboard data"
+              >
+                Retry
+              </Button>
+            </div>
+          </section>
+        )}
+
+        <section
+          className="animate-fade-in-up space-y-2"
+          style={{ animationDelay: '50ms' }}
+          aria-labelledby="overview-heading"
+        >
+          <h2 id="overview-heading" className="sr-only">
+            Overview metrics
+          </h2>
+          <DashboardOverviewMetrics overview={overview} isLoading={isLoading} />
+        </section>
+
         <section
           className="animate-fade-in-up space-y-2"
           style={{ animationDelay: '50ms' }}
@@ -68,9 +113,12 @@ export function DashboardOverview() {
           <ProgressOverviewGrid children={children} isLoading={isLoading} />
         </section>
 
-        <div className="grid animate-fade-in-up gap-8 lg:grid-cols-3" style={{ animationDelay: '100ms' }}>
+        <div
+          className="grid animate-fade-in-up gap-8 lg:grid-cols-3"
+          style={{ animationDelay: '100ms' }}
+        >
           <section
-            className="lg:col-span-2 space-y-6"
+            className="space-y-6 lg:col-span-2"
             aria-labelledby="recent-studies-heading"
           >
             <h2 id="recent-studies-heading" className="sr-only">

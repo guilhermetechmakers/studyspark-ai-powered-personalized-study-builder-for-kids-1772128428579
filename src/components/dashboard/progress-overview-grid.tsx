@@ -35,7 +35,12 @@ export function ProgressOverviewGrid({ children, isLoading = false }: ProgressOv
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        data-testid="dashboard-children"
+        aria-busy="true"
+        aria-label="Children progress"
+      >
         {[1, 2].map((i) => (
           <Card key={i} className="overflow-hidden">
             <CardHeader className="pb-2">
@@ -54,7 +59,11 @@ export function ProgressOverviewGrid({ children, isLoading = false }: ProgressOv
 
   if (list.length === 0) {
     return (
-      <Card className="border-dashed border-2 bg-[rgb(var(--peach-light))]/20">
+      <div data-testid="dashboard-children" aria-live="polite">
+        <Card
+          data-testid="empty-children"
+          className="border-dashed border-2 bg-[rgb(var(--peach-light))]/20"
+        >
         <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <UserPlus className="h-8 w-8 text-primary" />
@@ -66,15 +75,20 @@ export function ProgressOverviewGrid({ children, isLoading = false }: ProgressOv
             </p>
           </div>
           <Button asChild variant="outline">
-            <Link to="/dashboard/settings">Add Child</Link>
+            <Link to="/dashboard/children">Add Child</Link>
           </Button>
         </CardContent>
       </Card>
+      </div>
     )
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      data-testid="dashboard-children"
+      aria-live="polite"
+    >
       {list.map((child, idx) => (
         <Card
           key={child.id}

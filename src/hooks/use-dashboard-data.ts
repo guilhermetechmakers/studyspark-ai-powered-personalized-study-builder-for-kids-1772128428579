@@ -1,52 +1,60 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchChildren, fetchStudies, fetchRecommendations } from '@/api/dashboard'
-import type { Child, Study, Recommendation } from '@/types/dashboard'
-
-const MOCK_CHILDREN: Child[] = [
-  { id: '1', name: 'Emma', age: 8, progress: 72, streak: 5, lastActive: '2 hours ago' },
-  { id: '2', name: 'Liam', age: 10, progress: 45, streak: 2, lastActive: '1 day ago' },
-]
-
-const MOCK_STUDIES: Study[] = [
-  { id: '1', title: 'Fractions & Decimals', updatedAt: '2 hours ago', status: 'saved' },
-  { id: '2', title: 'World War II', updatedAt: '1 day ago', status: 'completed' },
-  { id: '3', title: 'Photosynthesis', updatedAt: '2 days ago', status: 'in-progress' },
-]
-
-const MOCK_RECOMMENDATIONS: Recommendation[] = [
-  { id: '1', topic: 'Multiplication Tables', confidence: 0.92, notes: 'Upcoming math test' },
-  { id: '2', topic: 'Solar System', confidence: 0.85, notes: 'From teacher notes' },
-  { id: '3', topic: 'Parts of Speech', confidence: 0.78, notes: 'From uploaded materials' },
-]
+import {
+  fetchChildren,
+  fetchStudies,
+  fetchRecommendations,
+  fetchOverview,
+} from '@/api/dashboard'
+import type { Child, Study, Recommendation, DashboardOverview } from '@/types/dashboard'
 
 function safeArray<T>(data: unknown): T[] {
   return Array.isArray(data) ? data : []
 }
 
-export function useDashboardData() {
+export interface UseDashboardDataResult {
+  overview: DashboardOverview
+  children: Child[]
+  studies: Study[]
+  recommendations: Recommendation[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+  setStudies: React.Dispatch<React.SetStateAction<Study[]>>
+  setRecommendations: React.Dispatch<React.SetStateAction<Recommendation[]>>
+}
+
+export function useDashboardData(): UseDashboardDataResult {
+  const [overview, setOverview] = useState<DashboardOverview>({
+    childrenCount: 0,
+    studiesCount: 0,
+  })
   const [children, setChildren] = useState<Child[]>([])
   const [studies, setStudies] = useState<Study[]>([])
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
     try {
-      const [childrenRes, studiesRes, recsRes] = await Promise.all([
+      const [overviewRes, childrenRes, studiesRes, recsRes] = await Promise.all([
+        fetchOverview(),
         fetchChildren(),
         fetchStudies(10),
         fetchRecommendations(),
       ])
-      const c = safeArray<Child>(childrenRes)
-      const s = safeArray<Study>(studiesRes)
-      const r = safeArray<Recommendation>(recsRes)
-      setChildren(c.length > 0 ? c : MOCK_CHILDREN)
-      setStudies(s.length > 0 ? s : MOCK_STUDIES)
-      setRecommendations(r.length > 0 ? r : MOCK_RECOMMENDATIONS)
-    } catch {
-      setChildren(MOCK_CHILDREN)
-      setStudies(MOCK_STUDIES)
-      setRecommendations(MOCK_RECOMMENDATIONS)
+      setOverview(overviewRes)
+      setChildren(safeArray<Child>(childrenRes))
+      setStudies(safeArray<Study>(studiesRes))
+      setRecommendations(safeArray<Recommendation>(recsRes))
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unable to load dashboard data'
+      setError(msg)
+      setOverview({ childrenCount: 0, studiesCount: 0 })
+      setChildren([])
+      setStudies([])
+      setRecommendations([])
     } finally {
       setIsLoading(false)
     }
@@ -57,12 +65,14 @@ export function useDashboardData() {
   }, [loadData])
 
   return {
+    overview,
     children,
     studies,
     recommendations,
     isLoading,
+    error,
+    refetch: loadData,
     setStudies,
     setRecommendations,
-    refetch: loadData,
   }
 }

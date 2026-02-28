@@ -28,3 +28,8 @@ export interface UIState {
   isEmpty: boolean
   error?: string
 }
+
+export interface DashboardOverview {
+  childrenCount: number
+  studiesCount: number
+}
