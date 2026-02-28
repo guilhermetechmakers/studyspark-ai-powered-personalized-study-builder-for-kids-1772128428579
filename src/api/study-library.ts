@@ -6,6 +6,7 @@
 import {
   fetchStudiesSupabase,
   fetchFoldersSupabase,
+  fetchFilterOptionsSupabase,
   createFolderSupabase,
   renameFolderSupabase,
   deleteFolderSupabase,
@@ -70,6 +71,15 @@ export async function fetchStudies(
 export async function fetchFolders(): Promise<FolderType[]> {
   const list = await fetchFoldersSupabase()
   return list ?? []
+}
+
+/** GET filter-options - Fetch children, subjects, learning styles from DB */
+export async function fetchFilterOptions(): Promise<{
+  children: { id: string; name: string }[]
+  subjects: { id: string; name: string }[]
+  learningStyles: { id: string; name: string }[]
+}> {
+  return fetchFilterOptionsSupabase()
 }
 
 /** POST folders - Create folder */

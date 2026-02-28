@@ -1,12 +1,13 @@
 /**
  * Study Library data hooks - Centralized fetching with safe defaults.
- * Enforces data ?? [] at every step. Falls back to mock when API unavailable.
+ * Uses live database data only; no mock/demo fallbacks.
  */
 
 import { useState, useEffect, useCallback } from 'react'
 import {
   fetchStudies,
   fetchFolders,
+  fetchFilterOptions,
   createFolder as apiCreateFolder,
   renameFolder as apiRenameFolder,
   deleteFolder as apiDeleteFolder,
@@ -19,13 +20,6 @@ import {
   createTag,
   updateStudyTags,
 } from '@/api/study-library'
-import {
-  mockStudyLibraryStudies,
-  mockStudyLibraryFolders,
-  mockStudyLibraryTags,
-  mockSubjects,
-  mockLearningStyles,
-} from '@/data/study-library-mock'
 import type {
   StudyCardType,
   FolderType,
@@ -53,9 +47,8 @@ export function useStudyLibrary(filters: StudyLibraryFilters) {
     setError(null)
 
     const load = async () => {
-      let result: { data: StudyCardType[]; totalCount: number }
       try {
-        result = await fetchStudies({
+        const result = await fetchStudies({
           search: filters.search || undefined,
           childId: filters.childId || undefined,
           subjectId: filters.subjectId || undefined,
@@ -68,27 +61,21 @@ export function useStudyLibrary(filters: StudyLibraryFilters) {
           page,
           pageSize: PAGE_SIZE,
         })
-      } catch {
-        result = { data: [], totalCount: 0 }
-      }
 
-      if (cancelled) return
+        if (cancelled) return
 
-      const data = result?.data ?? []
-      const list = Array.isArray(data) ? data : []
-
-      if (list.length === 0) {
-        const mockFiltered = filterMockStudies(mockStudyLibraryStudies, filters, mockStudyLibraryTags ?? [])
-        const start = (page - 1) * PAGE_SIZE
-        const paginated = (mockFiltered ?? []).slice(start, start + PAGE_SIZE)
-        setStudies(paginated)
-        setTotalCount((mockFiltered ?? []).length)
-      } else {
+        const data = result?.data ?? []
+        const list = Array.isArray(data) ? data : []
         setStudies(list)
         setTotalCount(result?.totalCount ?? list.length)
+      } catch (err) {
+        if (cancelled) return
+        setError((err as Error)?.message ?? 'Failed to load studies')
+        setStudies([])
+        setTotalCount(0)
+      } finally {
+        if (!cancelled) setIsLoading(false)
       }
-
-      setIsLoading(false)
     }
 
     load()
@@ -121,45 +108,6 @@ export function useStudyLibrary(filters: StudyLibraryFilters) {
   }
 }
 
-function filterMockStudies(
-  items: StudyCardType[],
-  filters: StudyLibraryFilters,
-  allTags: TagType[] = []
-): StudyCardType[] {
-  const list = items ?? []
-  const tagList = allTags ?? []
-  return list.filter((s) => {
-    if (filters.search) {
-      const q = filters.search.toLowerCase()
-      const match =
-        s.title?.toLowerCase().includes(q) ||
-        (s.subject ?? '').toLowerCase().includes(q) ||
-        (s.learningStyle ?? '').toLowerCase().includes(q) ||
-        (s.tags ?? []).some((t) => t.toLowerCase().includes(q))
-      if (!match) return false
-    }
-    if (filters.childId && s.childId !== filters.childId) return false
-    if (filters.subjectId && s.subjectId !== filters.subjectId) return false
-    if (filters.learningStyleId && s.learningStyleId !== filters.learningStyleId) return false
-    if (filters.starred && !s.isStarred) return false
-    if (filters.folderId != null) {
-      if (filters.folderId === '' || filters.folderId === 'all') return true
-      if (s.folderId !== filters.folderId) return false
-    }
-    if (filters.tagIds && filters.tagIds.length > 0) {
-      const tagNames = filters.tagIds
-        .map((tid) => tagList.find((t) => t.id === tid)?.name)
-        .filter(Boolean) as string[]
-      const studyTags = (s.tags ?? []).map((t) => t.toLowerCase())
-      const hasTag = tagNames.some((n) => studyTags.includes(n.toLowerCase()))
-      if (!hasTag) return false
-    }
-    if (filters.startDate && s.lastModified < filters.startDate) return false
-    if (filters.endDate && s.lastModified > filters.endDate) return false
-    return true
-  })
-}
-
 export function useStudyLibraryFolders() {
   const [folders, setFolders] = useState<FolderType[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -167,11 +115,7 @@ export function useStudyLibraryFolders() {
   const load = useCallback(async () => {
     setIsLoading(true)
     const data = await fetchFolders()
-    const list = data ?? []
-    setFolders(list)
-    if (list.length === 0) {
-      setFolders(mockStudyLibraryFolders ?? [])
-    }
+    setFolders(data ?? [])
     setIsLoading(false)
   }, [])
 
@@ -186,17 +130,9 @@ export function useStudyLibraryFolders() {
         setFolders((prev) => [...(prev ?? []), created])
         return created
       }
-      const mock: FolderType = {
-        id: `f${Date.now()}`,
-        name,
-        parentFolderId: parentFolderId ?? null,
-        position: (folders ?? []).length,
-        childCount: 0,
-      }
-      setFolders((prev) => [...(prev ?? []), mock])
-      return mock
+      return null
     },
-    [folders]
+    []
   )
 
   const renameFolder = useCallback(async (id: string, name: string) => {
@@ -207,10 +143,7 @@ export function useStudyLibraryFolders() {
       )
       return true
     }
-    setFolders((prev) =>
-      (prev ?? []).map((f) => (f.id === id ? { ...f, name } : f))
-    )
-    return true
+    return false
   }, [])
 
   const deleteFolder = useCallback(async (id: string) => {
@@ -219,8 +152,7 @@ export function useStudyLibraryFolders() {
       setFolders((prev) => (prev ?? []).filter((f) => f.id !== id))
       return true
     }
-    setFolders((prev) => (prev ?? []).filter((f) => f.id !== id))
-    return true
+    return false
   }, [])
 
   return {
@@ -238,8 +170,7 @@ export function useStudyLibraryTags() {
 
   const refetch = useCallback(async () => {
     const data = await fetchTags()
-    const list = Array.isArray(data) ? data : []
-    setTags(list.length > 0 ? list : (mockStudyLibraryTags ?? []))
+    setTags(Array.isArray(data) ? data : [])
   }, [])
 
   useEffect(() => {
@@ -250,15 +181,25 @@ export function useStudyLibraryTags() {
 }
 
 export function useStudyLibraryFilterOptions() {
+  const [options, setOptions] = useState<{
+    children: { id: string; name: string }[]
+    subjects: { id: string; name: string }[]
+    learningStyles: { id: string; name: string }[]
+  }>({ children: [], subjects: [], learningStyles: [] })
   const { tags } = useStudyLibraryTags()
-  const children = [
-    { id: '1', name: 'Emma' },
-    { id: '2', name: 'Liam' },
-  ]
+
+  useEffect(() => {
+    let cancelled = false
+    fetchFilterOptions().then((res) => {
+      if (!cancelled) setOptions(res)
+    })
+    return () => { cancelled = true }
+  }, [])
+
   return {
-    children,
-    subjects: mockSubjects ?? [],
-    learningStyles: mockLearningStyles ?? [],
+    children: options.children,
+    subjects: options.subjects,
+    learningStyles: options.learningStyles,
     tags: tags ?? [],
   }
 }

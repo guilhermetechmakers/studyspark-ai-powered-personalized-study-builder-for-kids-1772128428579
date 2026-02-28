@@ -19,6 +19,8 @@ import {
 import {
   SearchBar,
   FilterPanel,
+  EmptyState,
+  ErrorState,
   StudyGrid,
   FolderTree,
   BulkActionsBar,
@@ -110,6 +112,7 @@ export function StudyLibraryPage() {
     setPage,
     pageSize,
     isLoading,
+    error,
     refetch: refetchStudies,
   } = useStudyLibrary(filters)
 
@@ -127,6 +130,28 @@ export function StudyLibraryPage() {
   const studyList = studies ?? []
   const folderList = folders ?? []
   const tagList = allTags ?? []
+
+  const hasActiveFilters =
+    !!filters.childId ||
+    !!filters.subjectId ||
+    !!filters.learningStyleId ||
+    (filters.tagIds?.length ?? 0) > 0 ||
+    !!filters.startDate ||
+    !!filters.endDate ||
+    filters.starred === true
+
+  const clearAllFilters = useCallback(() => {
+    setFilters((prev) => ({
+      ...prev,
+      childId: undefined,
+      subjectId: undefined,
+      learningStyleId: undefined,
+      tagIds: undefined,
+      startDate: undefined,
+      endDate: undefined,
+      starred: undefined,
+    }))
+  }, [])
 
   const handleManageTags = useCallback((id: string) => {
     setTagModalStudyId(id)
@@ -388,7 +413,7 @@ export function StudyLibraryPage() {
       )}
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="space-y-6 p-6">
+        <div className="shrink-0 space-y-4 p-6 pb-0">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Study Library</h1>
@@ -492,7 +517,9 @@ export function StudyLibraryPage() {
               tags={filterOptions.tags}
             />
           </div>
+        </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
           {selectedCount > 0 && (
             <BulkActionsBar
               selectedCount={selectedCount}
@@ -529,24 +556,16 @@ export function StudyLibraryPage() {
                 </Card>
               ))}
             </div>
+          ) : error ? (
+            <ErrorState
+              message={error}
+              onRetry={refetchStudies}
+            />
           ) : studyList.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[rgb(var(--peach-light))] to-[rgb(var(--lavender))]/30">
-                  <FolderOpen className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  No studies yet
-                </h3>
-                <p className="mt-2 max-w-sm text-center text-sm text-muted-foreground">
-                  Create your first study set to get started. Upload teacher
-                  materials and let AI generate personalized content.
-                </p>
-                <Button className="mt-6" asChild>
-                  <Link to="/dashboard/create">Create Study</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <EmptyState
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={clearAllFilters}
+            />
           ) : (
             <>
               <StudyGrid

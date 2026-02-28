@@ -153,6 +153,50 @@ export async function fetchStudiesSupabase(
   return { data, totalCount }
 }
 
+/** Fetch filter options: children, subjects, learning styles from DB */
+export async function fetchFilterOptionsSupabase(): Promise<{
+  children: { id: string; name: string }[]
+  subjects: { id: string; name: string }[]
+  learningStyles: { id: string; name: string }[]
+}> {
+  const { data: { user } } = await supabase.auth.getUser()
+  const children: { id: string; name: string }[] = []
+  if (user) {
+    const { data: rows } = await supabase
+      .from('child_profiles')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+    const list = asArray<Record<string, unknown>>(rows ?? [])
+    for (const r of list) {
+      const id = String(r.id ?? '')
+      const name = String(r.name ?? '')
+      if (id) children.push({ id, name })
+    }
+  }
+
+  const { data: studyRows } = await supabase
+    .from('studies')
+    .select('subject, learning_style')
+    .eq('is_deleted', false)
+    .limit(500)
+
+  const subjectsMap = new Map<string, string>()
+  const stylesMap = new Map<string, string>()
+  for (const r of asArray<Record<string, unknown>>(studyRows ?? [])) {
+    const sub = String(r.subject ?? '').trim()
+    const style = String(r.learning_style ?? '').trim()
+    if (sub) subjectsMap.set(sub, sub)
+    if (style) stylesMap.set(style, style)
+  }
+
+  return {
+    children,
+    subjects: Array.from(subjectsMap.entries()).map(([id, name]) => ({ id, name })),
+    learningStyles: Array.from(stylesMap.entries()).map(([id, name]) => ({ id, name })),
+  }
+}
+
 /** Fetch folder tree */
 export async function fetchFoldersSupabase(): Promise<FolderType[]> {
   const { data: rows, error } = await supabase
