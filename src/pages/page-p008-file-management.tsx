@@ -23,8 +23,11 @@ import { searchFiles, listFiles, getDownloadUrl, deleteFile } from '@/api/files'
 import type { UploadedFile } from '@/types/files'
 import { dataGuard } from '@/lib/data-guard'
 
+/** Use '_all' for "no filter" - Radix Select requires non-empty value prop */
+const OCR_STATUS_ALL = '_all'
+
 const OCR_STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: 'All statuses' },
+  { value: OCR_STATUS_ALL, label: 'All statuses' },
   { value: 'pending', label: 'Pending' },
   { value: 'in_progress', label: 'Processing' },
   { value: 'completed', label: 'Completed' },
@@ -40,7 +43,7 @@ export function PageP008FileManagement() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const [ocrStatusFilter, setOcrStatusFilter] = useState<string>('')
+  const [ocrStatusFilter, setOcrStatusFilter] = useState<string>(OCR_STATUS_ALL)
   const hasShownUploadToast = useRef(false)
 
   useEffect(() => {
@@ -63,14 +66,14 @@ export function PageP008FileManagement() {
       if (debouncedQuery.trim()) {
         const { data } = await searchFiles({
           query: debouncedQuery.trim(),
-          ocrStatus: ocrStatusFilter || undefined,
+          ocrStatus: ocrStatusFilter === OCR_STATUS_ALL ? undefined : ocrStatusFilter,
           limit: 50,
         })
         setFiles(data ?? [])
       } else {
         const { data } = await listFiles({
           limit: 50,
-          ocrStatus: ocrStatusFilter || undefined,
+          ocrStatus: ocrStatusFilter === OCR_STATUS_ALL ? undefined : ocrStatusFilter,
         })
         setFiles(data ?? [])
       }
@@ -125,7 +128,7 @@ export function PageP008FileManagement() {
 
   const handleClearFilters = useCallback(() => {
     setQuery('')
-    setOcrStatusFilter('')
+    setOcrStatusFilter(OCR_STATUS_ALL)
   }, [])
 
   const safeFiles = dataGuard(files)
@@ -206,12 +209,12 @@ export function PageP008FileManagement() {
                 <FileText className="mb-4 h-16 w-16 text-muted-foreground/50" aria-hidden />
                 <p className="font-medium text-muted-foreground">No files found</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {debouncedQuery || ocrStatusFilter
+                  {debouncedQuery || ocrStatusFilter !== OCR_STATUS_ALL
                     ? 'Try adjusting your search or filters.'
                     : 'Upload files to get started.'}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                  {(debouncedQuery || ocrStatusFilter) && (
+                  {(debouncedQuery || ocrStatusFilter !== OCR_STATUS_ALL) && (
                     <Button
                       variant="outline"
                       className="rounded-full"
@@ -223,7 +226,7 @@ export function PageP008FileManagement() {
                     </Button>
                   )}
                   <Button
-                    variant={debouncedQuery || ocrStatusFilter ? 'outline' : 'default'}
+                    variant={debouncedQuery || ocrStatusFilter !== OCR_STATUS_ALL ? 'outline' : 'default'}
                     className="rounded-full"
                     onClick={() => navigate('/dashboard/upload-ocr')}
                     aria-label="Upload new files"

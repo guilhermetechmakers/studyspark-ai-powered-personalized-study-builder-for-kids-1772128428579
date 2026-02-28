@@ -76,11 +76,15 @@ export function TopicContextForm({
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject / Category</Label>
-            <Select value={subject} onValueChange={(v) => update({ subject: v })}>
+            <Select
+              value={subject || '_none'}
+              onValueChange={(v) => update({ subject: v === '_none' ? '' : v })}
+            >
               <SelectTrigger id="subject">
                 <SelectValue placeholder="Select subject" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="_none">Select subject</SelectItem>
                 {(SUBJECTS ?? []).map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}

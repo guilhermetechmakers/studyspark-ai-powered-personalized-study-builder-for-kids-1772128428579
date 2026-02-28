@@ -209,14 +209,15 @@ export function ChildProfileWizard({
               <div className="space-y-2">
                 <Label htmlFor={`child-grade-${index}`}>Grade level</Label>
                 <Select
-                  value={profile?.grade ?? ''}
-                  onValueChange={(v) => updateProfile(index, { grade: v })}
+                  value={profile?.grade || '_none'}
+                  onValueChange={(v) => updateProfile(index, { grade: v === '_none' ? '' : v })}
                 >
                   <SelectTrigger id={`child-grade-${index}`} aria-label={`Child ${index + 1} grade level`}>
                     <SelectValue placeholder="Select grade" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
+                      <SelectItem value="_none">Select grade</SelectItem>
                       {(GRADE_LEVELS ?? []).map((g) => (
                         <SelectItem key={g} value={g}>
                           {g}
