@@ -9,18 +9,14 @@ import {
   ChevronRight,
   Sparkles,
   Upload,
-  ShoppingCart,
-  CreditCard,
-  HelpCircle,
-  Shield,
-  User,
   Users,
   BarChart3,
   FileDown,
   FileText,
   History,
   Bell,
-  Search,
+  HelpCircle,
+  Shield,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -29,11 +25,8 @@ import { Separator } from '@/components/ui/separator'
 
 const navItems = [
   { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { to: '/dashboard/profile', label: 'Profile', icon: User },
   { to: '/dashboard/children', label: 'Children', icon: Users },
-  { to: '/dashboard/search', label: 'Search', icon: Search },
   { to: '/dashboard/studies', label: 'Study Library', icon: FolderOpen },
-  { to: '/dashboard/search', label: 'Search', icon: Search },
   { to: '/dashboard/export', label: 'Export & Print', icon: FileDown },
   { to: '/dashboard/export-progress', label: 'Export History', icon: History },
   { to: '/dashboard/notifications', label: 'Notifications', icon: Bell },
@@ -42,8 +35,6 @@ const navItems = [
   { to: '/dashboard/upload-materials', label: 'Upload Materials', icon: Upload },
   { to: '/dashboard/upload-ocr', label: 'Upload & OCR', icon: Upload },
   { to: '/dashboard/files', label: 'Files & Documents', icon: FileText },
-  { to: '/dashboard/checkout', label: 'Checkout', icon: ShoppingCart },
-  { to: '/dashboard/payments', label: 'Payments & Billing', icon: CreditCard },
 ]
 
 const bottomItems = [

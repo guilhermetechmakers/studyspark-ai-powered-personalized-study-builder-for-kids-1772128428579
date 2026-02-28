@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Bell, User, Settings, LogOut, Plus, Shield } from 'lucide-react'
+import { useRef } from 'react'
+import { Search, Bell, User, Settings, LogOut, Plus, Shield, ShoppingCart, CreditCard, HelpCircle } from 'lucide-react'
 import { useAuthContext } from '@/contexts/auth-context'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -16,7 +17,14 @@ import {
 
 export function DashboardHeader() {
   const navigate = useNavigate()
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const { user, signOut } = useAuthContext()
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = searchInputRef.current?.value?.trim()
+    navigate(q ? `/dashboard/search?q=${encodeURIComponent(q)}` : '/dashboard/search')
+  }
 
   const handleLogout = async () => {
     try {
@@ -41,17 +49,23 @@ export function DashboardHeader() {
       role="banner"
     >
       <div className="flex flex-1 items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+        <form
+          role="search"
+          className="relative flex-1 max-w-md"
+          onSubmit={handleSearchSubmit}
+          aria-label="Search studies"
+        >
           <Search
             className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <Input
+            ref={searchInputRef}
             placeholder="Search studies..."
             className="pl-9"
             aria-label="Search studies"
           />
-        </div>
+        </form>
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -83,14 +97,33 @@ export function DashboardHeader() {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
+              <Link to="/dashboard/profile" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/dashboard/checkout" className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                Checkout
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/dashboard/payments" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Payments & Billing
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
               <Link to="/dashboard/settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/help" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
+              <Link to="/about-help" className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4" />
                 Help
               </Link>
             </DropdownMenuItem>
