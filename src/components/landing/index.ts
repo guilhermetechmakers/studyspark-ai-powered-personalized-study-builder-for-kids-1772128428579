@@ -1,4 +1,5 @@
 export { HeroSection } from './hero-section'
+export { HeroDashboardPreview } from './hero-dashboard-preview'
 export { FeatureCard } from './feature-card'
 export { FeaturesOverview } from './features-overview'
 export { HowItWorks } from './how-it-works'

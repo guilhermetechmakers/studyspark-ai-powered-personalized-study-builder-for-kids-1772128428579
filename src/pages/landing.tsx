@@ -5,21 +5,19 @@ import { LandingHeader } from '@/components/layout/landing-header'
 import { LandingFooter } from '@/components/layout/landing-footer'
 import {
   HeroSection,
+  HeroDashboardPreview,
   FeaturesOverview,
   HowItWorks,
   PricingSnapshot,
   TestimonialsCarousel,
-  LogosShowcase,
   FAQPreview,
 } from '@/components/landing'
 import {
   mockPricingTiers,
   mockTestimonials,
-  mockPartnerLogos,
   mockFAQs,
   getPricingTiers,
   getTestimonials,
-  getPartnerLogos,
   getFAQs,
 } from '@/data/landing-mock'
 
@@ -46,19 +44,17 @@ export function LandingPage() {
   // const displayTiers = (tiers?.length ?? 0) > 0 ? tiers : mockPricingTiers
   const tiers = useMemo(() => getPricingTiers({ tiers: mockPricingTiers }), [])
   const testimonials = useMemo(() => getTestimonials({ testimonials: mockTestimonials }), [])
-  const partnerLogos = useMemo(() => getPartnerLogos({ partnerLogos: mockPartnerLogos }), [])
   const faqs = useMemo(() => getFAQs({ faqs: mockFAQs }), [])
 
   return (
     <div className="min-h-screen flex flex-col">
       <LandingHeader />
       <main className="flex-1">
-        <HeroSection />
+        <HeroSection heroIllustration={<HeroDashboardPreview />} />
         <FeaturesOverview />
         <HowItWorks />
         <PricingSnapshot tiers={tiers} />
         <TestimonialsCarousel testimonials={testimonials} />
-        <LogosShowcase logos={partnerLogos} />
         <FAQPreview faqs={faqs} />
 
         {/* CTA Section */}
