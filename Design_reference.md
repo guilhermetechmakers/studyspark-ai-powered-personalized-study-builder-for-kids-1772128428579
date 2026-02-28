@@ -326,7 +326,41 @@ All dashboard pages should be nested inside the dashboard layout, not separate r
 
 ## User Design Requirements
 
-On the homepage (http://localhost:5173/), replace the current icon in the hero section with a component that displays a realistic view of the app's dashboard. Additionally, increase interactivity by adding elements that demonstrate how the app functions internally. Remove the 'trusted by schools and educators' section.
+Issue: The homepage hero currently shows an image/icon on the right side. Desired: replace that visual with an interactive dashboard preview component that mirrors the real app's UI, and add more interactive elements to demonstrate how the app works. Also remove the 'Trusted by schools and educators' section.
+
+What to implement:
+- DashboardPreview in hero:
+  - Create a new responsive React component (DashboardPreview) to render inside the hero area, replacing the right-side image/icon.
+  - Layout: header 'StudySpark Dashboard Preview', left vertical nav (Overview, Build, Insights), and a main pane with three widgets: 
+    1) Today’s Plan (progress bar or donut)
+    2) AI-tailored Suggestions (three items with lightweight interactivity)
+    3) Mini sparkline/chart placeholder
+  - Interactivity: allow switching content by clicking the left nav items or internal tabs; use a mock dataset so content updates; include accessible controls (aria-labels, keyboard navigation).
+  - Styling: ensure the component respects current theme (colors, typography) and scales on desktop/tablet/mobile.
+  - DOM target: hero region of the homepage should render DashboardPreview in place of the existing right-side visual; ensure no regressions to the surrounding hero layout.
+
+- Additional interactive elements on the homepage (outside the hero):
+  1) Build-a-Plan widget: user can specify number of days (range input) and add subjects (tag-style text input). Display a generated plan summary with quick actions (e.g., Save, Start over).
+  2) AI Tailor Preview: a toggle or dropdown that simulates how content would be tailored (updates a preview text, e.g., "Tailored for grade X").
+  3) Optional modal/tooltips: convert existing buttons (Is my child's data safe?; How does the AI tailor content?) into lightweight inline modals or tooltips with explanations; ensure they remain accessible and functional.
+
+- Removal: Remove the section labeled or containing the text 'Trusted by schools and educators' from the DOM. Ensure layout remains coherent; adjust CSS if needed.
+
+- Validation criteria:
+  - DashboardPreview is rendered in the hero in place of the image/icon.
+  - At least two interactive homepage widgets exist (Build-a-Plan and AI Tailor Preview; more is fine).
+  - The 'Trusted by schools and educators' section is removed from the DOM.
+  - All changes are responsive and accessible (keyboard navigation, aria attributes).
+
+- DOM/context notes:
+  - Page: http://localhost:5173/
+  - Hero area is at the top of the homepage; there is a right-side visual currently in the hero.
+  - Header/nav contains links such as StudySpark, Features, How It Works, Pricing, FAQ, Help, Dashboard, Settings, Sign Up Free, etc.
+  - Existing modal-like buttons (Is my child's data safe?, How does the AI tailor content?) should remain operable or be replaced with accessible inline equivalents if chosen.
+
+- Testing suggestions:
+  - Manual QA: verify DashboardPreview renders in hero and responds to nav clicks; verify Build-a-Plan and AI Tailor widgets update content; verify Trusted by schools and educators is absent.
+  - Optional: add lightweight unit tests that query for DashboardPreview presence, Build-a-Plan widget, AI Tailor Preview, and absence of the trusted-by section.
 
 ## Implementation Notes
 

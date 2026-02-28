@@ -10,6 +10,8 @@ import {
   HowItWorks,
   PricingSnapshot,
   TestimonialsCarousel,
+  BuildAPlanWidget,
+  AITailorPreview,
   FAQPreview,
 } from '@/components/landing'
 import {
@@ -52,6 +54,29 @@ export function LandingPage() {
       <main className="flex-1">
         <HeroSection heroIllustration={<HeroDashboardPreview />} />
         <FeaturesOverview />
+
+        {/* Interactive widgets: Build-a-Plan and AI Tailor Preview */}
+        <section
+          id="interactive-demo"
+          className="py-20 md:py-28 bg-muted/30"
+          aria-labelledby="interactive-demo-heading"
+        >
+          <div className="container">
+            <h2 id="interactive-demo-heading" className="sr-only">
+              Interactive demo
+            </h2>
+            <div className="mx-auto max-w-2xl text-center mb-12">
+              <p className="text-lg text-muted-foreground">
+                Try it out—see how StudySpark works
+              </p>
+            </div>
+            <div className="grid gap-8 md:grid-cols-2 lg:max-w-5xl lg:mx-auto">
+              <BuildAPlanWidget />
+              <AITailorPreview />
+            </div>
+          </div>
+        </section>
+
         <HowItWorks />
         <PricingSnapshot tiers={tiers} />
         <TestimonialsCarousel testimonials={testimonials} />
