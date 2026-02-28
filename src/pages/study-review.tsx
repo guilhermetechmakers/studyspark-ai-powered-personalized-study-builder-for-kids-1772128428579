@@ -466,6 +466,9 @@ export function StudyReviewPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/dashboard/studies/${studyId}`}>View Study</Link>
+          </Button>
           {useSupabase && (
             <AutosaveIndicator status={autosaveStatus} className="shrink-0" />
           )}

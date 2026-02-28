@@ -1,0 +1,5 @@
+export { GamifiedSummaryTab } from './gamified-summary-tab'
+export { GamifiedLessonsTab } from './gamified-lessons-tab'
+export { GamifiedFlashcardsTab } from './gamified-flashcards-tab'
+export { GamifiedQuizzesTab } from './gamified-quizzes-tab'
+export { GamifiedProgressBar } from './gamified-progress-bar'

@@ -14,6 +14,7 @@ import { UploadMaterialsPage } from '@/pages/upload-materials'
 import { OcrCorrectionReviewPage } from '@/pages/ocr-correction-review'
 import { StudyDetailPage } from '@/pages/study-detail'
 import { StudyReviewPage } from '@/pages/study-review'
+import { GamifiedStudyDashboardPage } from '@/pages/gamified-study-dashboard'
 import { StudyViewerPage } from '@/pages/study-viewer'
 import { SettingsPage } from '@/pages/settings'
 import { CheckoutPage } from '@/pages/checkout'
@@ -85,7 +86,8 @@ export const router = createBrowserRouter([
       { path: 'search', element: <SearchPage /> },
       { path: 'studies', element: <StudyLibraryPage /> },
       { path: 'analytics', element: <AnalyticsDashboardPage /> },
-      { path: 'studies/:id', element: <StudyReviewPage /> },
+      { path: 'studies/:id', element: <GamifiedStudyDashboardPage /> },
+      { path: 'studies/:id/edit', element: <StudyReviewPage /> },
       { path: 'studies/:id/detail', element: <StudyDetailPage /> },
       { path: 'create', element: <CreateStudyWizard /> },
       { path: 'upload-materials', element: <UploadMaterialsPage /> },
