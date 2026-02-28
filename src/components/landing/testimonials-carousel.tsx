@@ -9,7 +9,7 @@ export interface TestimonialsCarouselProps {
   className?: string
 }
 
-const PLACEHOLDER_MESSAGE = 'Trusted by parents and educators. Testimonials coming soon.'
+const PLACEHOLDER_MESSAGE = 'What parents say about StudySpark. Testimonials coming soon.'
 
 function getInitials(name: string): string {
   const parts = (name ?? '').trim().split(/\s+/)

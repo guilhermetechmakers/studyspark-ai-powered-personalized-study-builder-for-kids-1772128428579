@@ -5,7 +5,8 @@ import { LandingHeader } from '@/components/layout/landing-header'
 import { LandingFooter } from '@/components/layout/landing-footer'
 import {
   HeroSection,
-  HeroDashboardPreview,
+  InteractiveDemoPreview,
+  HeroHowItWorks,
   FeaturesOverview,
   HowItWorks,
   PricingSnapshot,
@@ -52,7 +53,10 @@ export function LandingPage() {
     <div className="min-h-screen flex flex-col">
       <LandingHeader />
       <main className="flex-1">
-        <HeroSection heroIllustration={<HeroDashboardPreview />} />
+        <HeroSection
+          heroIllustration={<InteractiveDemoPreview />}
+          howItWorks={<HeroHowItWorks />}
+        />
         <FeaturesOverview />
 
         {/* Interactive widgets: Build-a-Plan and AI Tailor Preview */}

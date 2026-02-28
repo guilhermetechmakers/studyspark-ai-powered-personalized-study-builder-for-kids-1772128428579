@@ -10,6 +10,7 @@ export interface HeroSectionProps {
   primaryCTALabel?: string
   secondaryCTALabel?: string
   heroIllustration?: React.ReactNode
+  howItWorks?: React.ReactNode
   className?: string
 }
 
@@ -27,6 +28,7 @@ export function HeroSection({
   primaryCTALabel = DEFAULT_PRIMARY_CTA,
   secondaryCTALabel = DEFAULT_SECONDARY_CTA,
   heroIllustration,
+  howItWorks,
   className,
 }: HeroSectionProps) {
   return (
@@ -61,7 +63,7 @@ export function HeroSection({
             </div>
           </div>
 
-          {/* Hero illustration placeholder */}
+          {/* Hero illustration - InteractiveDemoPreview */}
           <div className="relative flex items-center justify-center animate-fade-in-up" style={{ animationDelay: '100ms' }}>
             {heroIllustration ?? (
               <div
@@ -80,6 +82,13 @@ export function HeroSection({
             )}
           </div>
         </div>
+
+        {/* How it works - inside hero */}
+        {howItWorks && (
+          <div className="mt-12 lg:mt-16">
+            {howItWorks}
+          </div>
+        )}
       </div>
     </section>
   )
