@@ -77,11 +77,18 @@ export async function prepareStudy(payload: PrepareStudyRequest): Promise<Prepar
       topic: payload.topic,
       subject: payload.subject,
       contextNotes: payload.contextNotes,
+      examDate: payload.examDate,
+      generationOptions: payload.generationOptions,
       childProfile: payload.childProfile,
       childProfileId: payload.childProfile?.id,
       childAge: payload.childProfile?.age,
       learningStyle: payload.learningStyle ?? 'playful',
-      materials: payload.uploadedMaterials ?? [],
+      // Include OCR/transcription text from each uploaded file so the AI uses document content
+      materials: (payload.uploadedMaterials ?? []).map((m) => ({
+        ...m,
+        ocrText: (m as Record<string, unknown>).ocrText ?? null,
+        snippets: (m as Record<string, unknown>).snippets ?? [],
+      })),
     }),
   })
   if (!res.ok) {
