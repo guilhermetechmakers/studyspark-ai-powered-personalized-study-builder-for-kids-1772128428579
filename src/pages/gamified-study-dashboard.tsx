@@ -10,6 +10,8 @@ import {
   BookOpen,
   Layers,
   HelpCircle,
+  Pencil,
+  Rocket,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -95,9 +97,9 @@ export function GamifiedStudyDashboardPage() {
   const { id } = useParams<{ id: string }>()
   const studyId = id ?? ''
 
-  const [sections, setSections] = useState<SectionBlock[]>([])
+  const [sections, setSections]     = useState<SectionBlock[]>([])
   const [studyTitle, setStudyTitle] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading]   = useState(true)
   const [customization, setCustomization] = useState<StudyCustomization>({
     theme: DEFAULT_THEME,
     cards: [],
@@ -105,6 +107,7 @@ export function GamifiedStudyDashboardPage() {
     isLocked: false,
   })
   const [showCustomization, setShowCustomization] = useState(false)
+
   const isMobile = useSyncExternalStore(
     (cb) => {
       const mq = window.matchMedia('(max-width: 767px)')
@@ -112,7 +115,7 @@ export function GamifiedStudyDashboardPage() {
       return () => mq.removeEventListener('change', cb)
     },
     () => typeof window !== 'undefined' && window.innerWidth < 768,
-    () => false
+    () => false,
   )
 
   useEffect(() => {
@@ -156,21 +159,17 @@ export function GamifiedStudyDashboardPage() {
 
   const handleCustomizationChange = useCallback(
     (partial: Partial<StudyCustomization>) => {
-      const next: StudyCustomization = {
-        ...customization,
-        ...partial,
-      }
+      const next: StudyCustomization = { ...customization, ...partial }
       setCustomization(next)
       saveStudyCustomization(studyId, next)
     },
-    [studyId, customization]
+    [studyId, customization],
   )
 
-  const themeRgb = customization.theme
+  const themeRgb    = customization.theme
   const customCards = customization.cards ?? []
   const sectionCards = extractFlashcardsFromSections(sections)
-  const cards =
-    customCards.length > 0 ? customCards : sectionCards
+  const cards   = customCards.length > 0 ? customCards : sectionCards
   const summary = extractSummary(sections)
   const lessons = extractLessons(sections)
   const quizzes = extractQuizzes(sections)
@@ -185,7 +184,7 @@ export function GamifiedStudyDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col p-6">
+      <div className="flex h-full flex-col p-6 gap-4">
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-10 rounded-full" />
           <div className="space-y-2">
@@ -193,10 +192,9 @@ export function GamifiedStudyDashboardPage() {
             <Skeleton className="h-4 w-32" />
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-6">
-          <Skeleton className="h-64 rounded-2xl" />
-          <Skeleton className="h-48 rounded-2xl" />
-        </div>
+        <Skeleton className="h-20 rounded-3xl" />
+        <Skeleton className="h-64 rounded-3xl" />
+        <Skeleton className="h-48 rounded-3xl" />
       </div>
     )
   }
@@ -206,25 +204,26 @@ export function GamifiedStudyDashboardPage() {
       className="flex h-full flex-col"
       style={
         {
-          '--study-primary': themeRgb.primary,
-          '--study-secondary': themeRgb.secondary,
-          '--study-background': themeRgb.background,
+          '--study-primary':     themeRgb.primary,
+          '--study-secondary':   themeRgb.secondary,
+          '--study-background':  themeRgb.background,
         } as React.CSSProperties
       }
     >
+      {/* ── Header ─────────────────────────────────────────── */}
       <header
         className="flex shrink-0 items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-6"
         role="banner"
       >
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild aria-label="Back to studies">
             <Link to="/dashboard/studies">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-9 w-9">
             <AvatarFallback
-              className="text-sm font-semibold"
+              className="text-sm font-bold"
               style={{
                 backgroundColor: `rgb(${themeRgb.primary} / 0.2)`,
                 color: `rgb(${themeRgb.primary})`,
@@ -233,34 +232,28 @@ export function GamifiedStudyDashboardPage() {
               {(studyTitle ?? 'S').charAt(0)}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <h1 className="text-lg font-bold text-foreground sm:text-xl">
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-extrabold text-foreground sm:text-lg">
               {studyTitle ?? 'Untitled Study'}
             </h1>
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              Summary · Lessons · Flashcards · Quizzes
-            </p>
+            <p className="text-[11px] text-muted-foreground">Parent preview</p>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/study/${studyId}/play`} className="gap-2">
-              <Play className="h-4 w-4" />
-              <span className="hidden sm:inline">Open for child</span>
-            </Link>
-          </Button>
           <Button
             variant={showCustomization ? 'default' : 'outline'}
             size="sm"
             onClick={() => setShowCustomization((v) => !v)}
-            className="gap-2"
-            aria-label={showCustomization ? 'Hide customization' : 'Show parent customization'}
+            className="gap-1.5"
+            aria-label={showCustomization ? 'Hide customization' : 'Customise study'}
           >
             <Settings2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Customize</span>
+            <span className="hidden sm:inline">Customise</span>
           </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/dashboard/studies/${studyId}/edit`} className="hidden gap-2 sm:inline-flex">
+          <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex gap-1.5">
+            <Link to={`/dashboard/studies/${studyId}/edit`}>
+              <Pencil className="h-3.5 w-3.5" />
               Edit
             </Link>
           </Button>
@@ -269,72 +262,115 @@ export function GamifiedStudyDashboardPage() {
 
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-auto p-4 sm:p-6">
-          <div className="mx-auto max-w-3xl">
-            <div className="mb-6 animate-fade-in">
+          <div className="mx-auto max-w-3xl space-y-6">
+
+            {/* ── Launch for child banner ─────────────────── */}
+            <div
+              className={cn(
+                'relative overflow-hidden rounded-3xl border-2 p-5 sm:p-6 animate-fade-in',
+              )}
+              style={{
+                borderColor: `rgb(${themeRgb.primary} / 0.4)`,
+                background: `linear-gradient(135deg, rgb(${themeRgb.primary}/0.12), rgb(${themeRgb.secondary}/0.18))`,
+              }}
+            >
+              {/* Decorative blob */}
+              <div
+                className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-20"
+                style={{ backgroundColor: `rgb(${themeRgb.primary})` }}
+              />
+              <div
+                className="pointer-events-none absolute -bottom-6 left-12 h-20 w-20 rounded-full opacity-10"
+                style={{ backgroundColor: `rgb(${themeRgb.secondary})` }}
+              />
+
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl shadow-md animate-float select-none"
+                    style={{ backgroundColor: `rgb(${themeRgb.primary})` }}
+                  >
+                    🚀
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      Parent controls
+                    </p>
+                    <p className="text-lg font-black text-foreground">Launch for your child</p>
+                    <p className="text-sm text-muted-foreground">
+                      Opens the fun kid-friendly study player
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  asChild
+                  size="lg"
+                  className={cn(
+                    'shrink-0 gap-2 rounded-2xl px-6 font-black text-white',
+                    'shadow-lg hover:opacity-90 hover:scale-105 transition-all duration-200',
+                  )}
+                  style={{
+                    background: `linear-gradient(135deg, rgb(${themeRgb.primary}), rgb(${themeRgb.secondary}))`,
+                  }}
+                >
+                  <Link to={`/study/${studyId}/play`}>
+                    <Rocket className="h-5 w-5" />
+                    Start Study Session
+                    <Play className="h-4 w-4 fill-current" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* ── Progress bar ───────────────────────────── */}
+            <div className="animate-fade-in" style={{ animationDelay: '80ms' }}>
               <GamifiedProgressBar
                 gamification={customization.gamification ?? DEFAULT_GAMIFICATION}
                 themeRgb={themeRgb}
               />
             </div>
 
-            <Tabs defaultValue="summary" className="w-full">
-              <TabsList className="mb-6 grid w-full grid-cols-2 rounded-xl sm:grid-cols-4">
-                <TabsTrigger value="summary" className="gap-2 rounded-lg">
-                  <FileText className="h-4 w-4" aria-hidden />
+            {/* ── Content tabs ───────────────────────────── */}
+            <Tabs defaultValue="summary" className="w-full animate-fade-in" style={{ animationDelay: '120ms' } as React.CSSProperties}>
+              <TabsList className="mb-5 grid w-full grid-cols-2 rounded-2xl sm:grid-cols-4">
+                <TabsTrigger value="summary" className="gap-1.5 rounded-xl text-xs sm:text-sm">
+                  <FileText className="h-3.5 w-3.5" aria-hidden />
                   Summary
                 </TabsTrigger>
-                <TabsTrigger value="lessons" className="gap-2 rounded-lg">
-                  <BookOpen className="h-4 w-4" aria-hidden />
+                <TabsTrigger value="lessons" className="gap-1.5 rounded-xl text-xs sm:text-sm">
+                  <BookOpen className="h-3.5 w-3.5" aria-hidden />
                   Lessons
                 </TabsTrigger>
-                <TabsTrigger value="flashcards" className="gap-2 rounded-lg">
-                  <Layers className="h-4 w-4" aria-hidden />
+                <TabsTrigger value="flashcards" className="gap-1.5 rounded-xl text-xs sm:text-sm">
+                  <Layers className="h-3.5 w-3.5" aria-hidden />
                   Flashcards
                 </TabsTrigger>
-                <TabsTrigger value="quizzes" className="gap-2 rounded-lg">
-                  <HelpCircle className="h-4 w-4" aria-hidden />
+                <TabsTrigger value="quizzes" className="gap-1.5 rounded-xl text-xs sm:text-sm">
+                  <HelpCircle className="h-3.5 w-3.5" aria-hidden />
                   Quizzes
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="summary" className="mt-0">
-                <GamifiedSummaryTab
-                  summaryText={summary}
-                  themeRgb={themeRgb}
-                />
+                <GamifiedSummaryTab summaryText={summary} themeRgb={themeRgb} />
               </TabsContent>
-
               <TabsContent value="lessons" className="mt-0">
-                <GamifiedLessonsTab
-                  lessons={lessons}
-                  themeRgb={themeRgb}
-                />
+                <GamifiedLessonsTab lessons={lessons} themeRgb={themeRgb} />
               </TabsContent>
-
               <TabsContent value="flashcards" className="mt-0">
-                <GamifiedFlashcardsTab
-                  cards={cards}
-                  themeRgb={themeRgb}
-                />
+                <GamifiedFlashcardsTab cards={cards} themeRgb={themeRgb} />
               </TabsContent>
-
               <TabsContent value="quizzes" className="mt-0">
-                <GamifiedQuizzesTab
-                  quizzes={quizzes}
-                  themeRgb={themeRgb}
-                />
+                <GamifiedQuizzesTab quizzes={quizzes} themeRgb={themeRgb} />
               </TabsContent>
             </Tabs>
           </div>
         </main>
 
+        {/* ── Customization sidebar (desktop) ─────────── */}
         {showCustomization && (
-          <aside
-            className={cn(
-              'hidden shrink-0 flex-col overflow-hidden md:flex',
-              'w-full md:w-80 lg:w-96'
-            )}
-          >
+          <aside className={cn('hidden shrink-0 flex-col overflow-hidden md:flex', 'w-full md:w-80 lg:w-96')}>
             <ParentCustomizationPanel
               customization={customization}
               onCustomizationChange={handleCustomizationChange}
@@ -343,15 +379,12 @@ export function GamifiedStudyDashboardPage() {
         )}
       </div>
 
+      {/* ── Customization sheet (mobile) ─────────────── */}
       <Sheet
         open={showCustomization && isMobile}
         onOpenChange={(open) => !open && setShowCustomization(false)}
       >
-        <SheetContent
-          side="right"
-          className="w-full max-w-sm p-0 md:hidden"
-          showCloseButton
-        >
+        <SheetContent side="right" className="w-full max-w-sm p-0 md:hidden" showCloseButton>
           <div className="h-full overflow-auto pt-14">
             <ParentCustomizationPanel
               customization={customization}

@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
+import { Sparkles, Star, Users, Home } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, Sparkles, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Progress } from '@/components/ui/progress'
 import { ActivityCarousel } from './activity-carousel'
 import { FlashcardsPanel } from './flashcards-panel'
 import { QuizPanel } from './quiz-panel'
@@ -57,29 +55,32 @@ export function StudyViewerContainer({
 }: StudyViewerContainerProps) {
   const activities = useMemo(
     () => (Array.isArray(studySetProp?.activities) ? studySetProp!.activities : []),
-    [studySetProp]
+    [studySetProp],
   )
 
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [progress, setProgress] = useState<ProgressData>(() => ({
+  const [currentIndex, setCurrentIndex]   = useState(0)
+  const [progress, setProgress]           = useState<ProgressData>(() => ({
     ...DEFAULT_PROGRESS,
     total: activities.length,
     ...studySetProp?.progress,
   }))
-  const [isParentView, setIsParentView] = useState(false)
+  const [isParentView, setIsParentView]         = useState(false)
   const [isParentCollapsed, setIsParentCollapsed] = useState(false)
-  const [textSize, setTextSize] = useState<TextSizeLevel>('normal')
-  const [highContrast, setHighContrast] = useState(false)
+  const [textSize, setTextSize]                 = useState<TextSizeLevel>('normal')
+  const [highContrast, setHighContrast]         = useState(false)
   const [readAloudEnabled, setReadAloudEnabled] = useState(false)
-  const [sessionStartTime] = useState(Date.now())
+  const [sessionStartTime]                      = useState(Date.now())
   const [activityStartTime, setActivityStartTime] = useState(Date.now())
   const [hintsUsedCurrentActivity, setHintsUsedCurrentActivity] = useState(0)
+  const [justAnsweredCorrect, setJustAnsweredCorrect] = useState(false)
 
   const currentActivity = activities[currentIndex] ?? null
-  const activityType = currentActivity?.type ?? 'flashcard'
-  const content = currentActivity?.content
+  const activityType    = currentActivity?.type ?? 'flashcard'
+  const content         = currentActivity?.content
 
-  const progressPercent = progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0
+  const progressPercent = progress.total > 0
+    ? Math.round((progress.completed / progress.total) * 100)
+    : 0
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -98,23 +99,27 @@ export function StudyViewerContainer({
     async (correct: boolean) => {
       setProgress((p) => ({
         ...p,
-        stars: (p.stars ?? 0) + (correct ? 1 : 0),
+        stars:     (p.stars     ?? 0) + (correct ? 1 : 0),
         completed: Math.min((p.completed ?? 0) + 1, p.total),
       }))
 
+      if (correct) {
+        setJustAnsweredCorrect(true)
+        setTimeout(() => setJustAnsweredCorrect(false), 800)
+      }
+
       if (sessionToken && currentActivity?.id && onAttemptSubmit) {
         const timeSpentMs = Date.now() - activityStartTime
-        const score = correct ? 10 : 0
         await onAttemptSubmit({
           activityId: currentActivity.id,
-          score,
+          score: correct ? 10 : 0,
           timeSpentMs,
           hintsUsed: hintsUsedCurrentActivity,
         })
       }
       setHintsUsedCurrentActivity(0)
     },
-    [sessionToken, currentActivity?.id, activityType, onAttemptSubmit, activityStartTime, hintsUsedCurrentActivity]
+    [sessionToken, currentActivity?.id, onAttemptSubmit, activityStartTime, hintsUsedCurrentActivity],
   )
 
   const handleParentToggle = useCallback(() => {
@@ -138,76 +143,101 @@ export function StudyViewerContainer({
   }, [activityType, content])
 
   const allComplete = progress.total > 0 && progress.completed >= progress.total
+  const studyTitle  = studySetProp?.title ?? 'Study Time!'
 
   return (
     <div
       className={cn(
-        'min-h-screen bg-gradient-to-br from-[rgb(var(--peach-light))]/20 via-background to-[rgb(var(--lavender))]/10',
-        highContrast && 'from-primary/10 to-primary/5',
-        className
+        'min-h-screen',
+        highContrast
+          ? 'bg-background'
+          : 'bg-gradient-to-br from-[rgb(var(--peach-light))]/30 via-background to-[rgb(var(--lavender))]/15',
+        className,
       )}
     >
-      <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur">
-        <div className="container flex h-14 items-center justify-between px-4">
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-            aria-label="Back to parent dashboard"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            Back to parent
-          </Link>
+      {/* ── Kid-friendly header ───────────────────────── */}
+      <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-md">
+        <div className="container flex h-16 items-center justify-between px-4">
+          {/* Left: branding */}
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <span className="font-bold text-foreground">StudySpark</span>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-xs font-bold text-primary">StudySpark ⚡</p>
+              <p className="text-sm font-black text-foreground truncate max-w-[180px]">{studyTitle}</p>
+            </div>
+            <p className="text-sm font-black text-foreground sm:hidden truncate max-w-[120px]">{studyTitle}</p>
           </div>
+
+          {/* Center: star score display */}
+          <div className="flex items-center gap-1.5 rounded-2xl bg-amber-50 px-4 py-1.5 shadow-sm dark:bg-amber-900/20">
+            <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+            <span
+              className={cn(
+                'text-lg font-black text-amber-700 dark:text-amber-300 transition-transform duration-200',
+                justAnsweredCorrect && 'scale-150',
+              )}
+            >
+              {progress.stars ?? 0}
+            </span>
+          </div>
+
+          {/* Right: parent overlay toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={handleParentToggle}
             aria-label="Open parent view"
-            className="gap-2"
+            className="gap-1.5 rounded-xl"
           >
             <Users className="h-4 w-4" />
-            Parent
+            <span className="hidden sm:inline">Parent</span>
           </Button>
         </div>
-        <div className="px-4 pb-2">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {(studySetProp?.title ?? 'S').charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <Progress value={progressPercent} className="h-2" />
-              <p className="mt-1 text-center text-xs text-muted-foreground">
-                {progress.completed} of {progress.total} completed
-              </p>
-            </div>
+
+        {/* Progress bar strip */}
+        <div className="h-3 w-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-r-full bg-gradient-to-r from-primary to-secondary transition-all duration-700 ease-out"
+            style={{ width: `${progressPercent}%` }}
+            role="progressbar"
+            aria-valuenow={progressPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`${progressPercent}% complete`}
+          />
+        </div>
+
+        {/* Progress label */}
+        <div className="container px-4 pb-2 pt-1">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>{progress.completed} of {progress.total} done</span>
+            <span className="font-bold">{progressPercent}%</span>
           </div>
         </div>
       </header>
 
-      <main className="container max-w-3xl px-4 py-6">
-        <div className="mb-6">
-          <AccessibilityControls
-            textSize={textSize}
-            highContrast={highContrast}
-            readAloud={readAloudEnabled}
-            onTextSizeChange={setTextSize}
-            onHighContrastChange={setHighContrast}
-            onReadAloudChange={setReadAloudEnabled}
-          />
-        </div>
+      <main className="container max-w-3xl px-4 py-6 space-y-6">
+        {/* Accessibility controls */}
+        <AccessibilityControls
+          textSize={textSize}
+          highContrast={highContrast}
+          readAloud={readAloudEnabled}
+          onTextSizeChange={setTextSize}
+          onHighContrastChange={setHighContrast}
+          onReadAloudChange={setReadAloudEnabled}
+        />
 
+        {/* Activity carousel */}
         <ActivityCarousel
           activities={activities}
           currentIndex={currentIndex}
           onChangeIndex={setCurrentIndex}
         />
 
-        <div className="mt-8">
+        {/* Activity panel */}
+        <div>
           {activityType === 'flashcard' && (
             <FlashcardsPanel
               cards={cards}
@@ -238,17 +268,42 @@ export function StudyViewerContainer({
           )}
         </div>
 
-        <div className="mt-8">
-          <GamificationPanel stats={progress} />
-        </div>
+        {/* Gamification panel */}
+        <GamificationPanel stats={progress} />
 
+        {/* ── Completion celebration ──────────────────── */}
         {allComplete && (
-          <div className="mt-8 animate-bounce-in rounded-3xl border-2 border-primary bg-primary/10 p-8 text-center">
-            <p className="text-2xl font-bold text-foreground">🎉 Great job!</p>
-            <p className="mt-2 text-muted-foreground">You completed this study set!</p>
-            <Button size="lg" className="mt-4" onClick={onComplete}>
-              Finish
-            </Button>
+          <div className="animate-bounce-in overflow-hidden rounded-3xl border-4 border-primary bg-gradient-to-br from-primary/15 to-secondary/15 p-10 text-center shadow-glow">
+            <div className="text-7xl animate-celebration mb-4 select-none">🏆</div>
+            <p className="text-3xl font-black text-foreground">Amazing!</p>
+            <p className="mt-2 text-lg font-semibold text-muted-foreground">
+              You completed the whole study set!
+            </p>
+            <div className="mt-4 flex justify-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className="h-7 w-7 fill-amber-400 text-amber-400 animate-star-burst"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                />
+              ))}
+            </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Button
+                size="lg"
+                onClick={onComplete}
+                className="gap-2 rounded-2xl font-black bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
+              >
+                <Star className="h-5 w-5 fill-current" />
+                Finish & Go Back
+              </Button>
+              <Button asChild variant="outline" size="lg" className="rounded-2xl gap-2">
+                <Link to="/dashboard">
+                  <Home className="h-5 w-5" />
+                  Dashboard
+                </Link>
+              </Button>
+            </div>
           </div>
         )}
       </main>
