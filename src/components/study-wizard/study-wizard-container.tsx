@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import {
   StepperNav,
   TopicContextForm,
@@ -52,12 +53,21 @@ import type {
 } from '@/types/study-wizard'
 
 const STEPS = [
-  { id: 1, title: 'Topic & Context', icon: FileText },
-  { id: 2, title: 'Upload Materials', icon: Upload },
-  { id: 3, title: 'Child & Style', icon: User },
-  { id: 4, title: 'Generation Options', icon: Settings },
-  { id: 5, title: 'AI Generation', icon: Sparkles },
-  { id: 6, title: 'Review & Edit', icon: Check },
+  { id: 1, title: 'Topic & Context', icon: FileText,  emoji: '✏️' },
+  { id: 2, title: 'Upload Materials', icon: Upload,   emoji: '📎' },
+  { id: 3, title: 'Child & Style',   icon: User,     emoji: '🧒' },
+  { id: 4, title: 'Gen Options',     icon: Settings,  emoji: '⚙️' },
+  { id: 5, title: 'AI Generation',   icon: Sparkles,  emoji: '✨' },
+  { id: 6, title: 'Review & Save',   icon: Check,    emoji: '🎉' },
+]
+
+const STEP_COLORS = [
+  'bg-blue-500',
+  'bg-violet-500',
+  'bg-pink-500',
+  'bg-amber-500',
+  'bg-emerald-500',
+  'bg-orange-500',
 ]
 
 const MOCK_CHILDREN: ChildProfile[] = [
@@ -314,11 +324,20 @@ export function StudyWizardContainer() {
         topic: state.topicContext?.topic ?? '',
         subject: state.topicContext?.subject,
         contextNotes: state.topicContext?.contextNotes,
+        examDate: state.topicContext?.examDate,
+        generationOptions: {
+          depth: state.generationOptions?.depth ?? 'medium',
+          outputs: state.generationOptions?.outputs ?? ['flashcards', 'quizzes'],
+          curriculumAligned: state.generationOptions?.curriculumAligned ?? false,
+        },
+        // Include full OCR/transcription text so the AI Edge Function can use documents as context
         uploadedMaterials: (state.materials ?? []).map((m) => ({
           id: m.id,
           type: m.type,
           sourceUrl: m.url,
-          metadata: {},
+          ocrText: m.ocrText ?? m.transcription ?? null,
+          snippets: (m.ocrSnippets ?? []).filter((s) => s.important).map((s) => s.text),
+          metadata: { name: m.name, size: m.size ?? null },
         })),
         childProfile: selectedChild
           ? { id: selectedChild.id, age: selectedChild.age, grade: selectedChild.grade, learningPreferences: [] }
@@ -357,7 +376,7 @@ export function StudyWizardContainer() {
     } finally {
       dispatch({ type: 'SET_GENERATING', value: false })
     }
-  }, [state.topicContext, state.materials, state.learningStyle, selectedChild, simulateStreaming])
+  }, [state.topicContext, state.materials, state.learningStyle, state.generationOptions, selectedChild, simulateStreaming])
 
   const handleCancelGeneration = useCallback(() => {
     abortRef.current = true
@@ -476,15 +495,39 @@ export function StudyWizardContainer() {
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
       {state.step > 0 && (
-        <div className="border-b border-border bg-card px-4 py-3">
+        <div className="border-b border-border bg-gradient-to-r from-card via-card to-primary/5 px-4 py-3">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <StepperNav
-              steps={STEPS ?? []}
-              currentStep={state.step}
-              onStepClick={handleStepClick}
-              disabled={state.isGenerating}
-            />
+            {/* Emoji step indicators */}
+            <div className="flex items-center gap-1 overflow-x-auto">
+              {(STEPS ?? []).map((step) => {
+                const isCurrent = state.step === step.id
+                const isDone = state.step > step.id
+                const color = STEP_COLORS[(step.id - 1) % STEP_COLORS.length]
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    onClick={() => handleStepClick(step.id)}
+                    disabled={state.isGenerating || step.id > state.step}
+                    className={cn(
+                      'flex shrink-0 items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-bold transition-all duration-200',
+                      isCurrent
+                        ? `${color} text-white shadow-sm scale-105`
+                        : isDone
+                        ? 'bg-green-500 text-white opacity-80 hover:opacity-100'
+                        : 'bg-muted text-muted-foreground opacity-50',
+                    )}
+                    aria-label={`Step ${step.id}: ${step.title}`}
+                  >
+                    <span className="text-sm leading-none">
+                      {isDone ? '✓' : step.emoji}
+                    </span>
+                    <span className="hidden sm:inline">{step.title}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
               {(isStep5 || isStep6) && (
                 <StatusBadge
                   variant={
@@ -494,11 +537,15 @@ export function StudyWizardContainer() {
                   stage={state.isGenerating ? 'Generating...' : undefined}
                 />
               )}
-            </div>
-            <div className="flex items-center gap-2">
               <SettingsDrawer quota={{ usedCount: 0, limit: 10, windowEnd: new Date().toISOString() }} />
-              <Progress value={progress} className="hidden w-24 md:block" aria-label="Progress" />
             </div>
+          </div>
+          {/* Thin progress bar */}
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-700"
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
       )}
@@ -642,61 +689,78 @@ export function StudyWizardContainer() {
       </div>
 
       {state.step > 0 && state.step < 6 && !isStep5 && (
-        <div className="border-t border-border bg-card px-6 py-4">
-          <div className="container flex max-w-2xl justify-between">
+        <div className="border-t border-border bg-gradient-to-r from-card via-card to-primary/5 px-6 py-4">
+          <div className="container flex max-w-2xl items-center justify-between gap-4">
             <Button
               variant="outline"
+              size="lg"
               onClick={handleBack}
               disabled={state.step === 1 || state.isGenerating}
+              className="gap-2 rounded-2xl"
             >
-              <ChevronLeft className="mr-2 h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" />
               Back
             </Button>
+            <span className="text-xs font-bold text-muted-foreground hidden sm:block">
+              Step {state.step} of {STEPS.length}
+            </span>
             <Button
+              size="lg"
               onClick={handleNext}
               disabled={!canProceed || state.isGenerating}
+              className="gap-2 rounded-2xl font-black bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
             >
-              Next
-              <ChevronRight className="ml-2 h-4 w-4" />
+              Continue
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       )}
 
       {isStep5 && !state.isGenerating && state.aiBlocks.length === 0 && (
-        <div className="border-t border-border bg-card px-6 py-4">
-          <div className="container flex max-w-2xl justify-between">
+        <div className="border-t border-border bg-gradient-to-r from-card via-card to-emerald-500/5 px-6 py-4">
+          <div className="container flex max-w-2xl items-center justify-between gap-4">
             <Button
               variant="outline"
+              size="lg"
               onClick={handleBack}
               disabled={state.isGenerating}
+              className="gap-2 rounded-2xl"
             >
-              <ChevronLeft className="mr-2 h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" />
               Back
             </Button>
             <Button
+              size="lg"
               onClick={handleStartGeneration}
               disabled={!canProceed}
+              className="gap-2 rounded-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90 shadow-lg"
             >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate Study
+              <Sparkles className="h-5 w-5" />
+              Generate Study ✨
             </Button>
           </div>
         </div>
       )}
 
       {isStep6 && (
-        <div className="border-t border-border bg-card px-6 py-4">
-          <div className="container flex max-w-2xl justify-between">
+        <div className="border-t border-border bg-gradient-to-r from-card via-card to-orange-500/5 px-6 py-4">
+          <div className="container flex max-w-2xl items-center justify-between gap-4">
             <Button
               variant="outline"
+              size="lg"
               onClick={() => dispatch({ type: 'SET_STEP', step: 5 })}
+              className="gap-2 rounded-2xl"
             >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Back to Generation
+              <ChevronLeft className="h-4 w-4" />
+              Back
             </Button>
-            <Button onClick={() => navigate('/dashboard/studies')}>
-              Done
+            <Button
+              size="lg"
+              onClick={() => navigate('/dashboard/studies')}
+              className="gap-2 rounded-2xl font-black bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
+            >
+              Done — View Studies 🎉
             </Button>
           </div>
         </div>
